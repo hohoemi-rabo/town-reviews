@@ -69,8 +69,8 @@ export default function Home() {
   const [showMap, setShowMap] = useState(true)
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <header className="bg-white shadow-sm z-10 px-4 py-3 sm:px-6">
+    <main className="h-screen w-screen flex flex-col overflow-hidden">
+      <header className="bg-white shadow-sm z-10 px-4 py-3 sm:px-6 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl font-bold text-washi-green">
             まち口コミ帳
@@ -85,7 +85,7 @@ export default function Home() {
       </header>
 
       {showMap ? (
-        <div className="flex-1 relative">
+        <div className="flex-1 w-full relative overflow-hidden">
           <Map
             className="w-full h-full"
             places={sampleReviews.map((r) => r.places!).filter(Boolean)}
