@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
+import sharp from 'sharp'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,20 +35,33 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${crypto.randomUUID()}.${fileExt}`
-    const filePath = `recommendations/${fileName}`
-
     // Convert File to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
+    // Process image: resize and convert to WebP
+    const processedImage = await sharp(buffer)
+      .resize(1200, 1200, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({
+        quality: 80,
+        effort: 6,
+      })
+      .toBuffer()
+
+    // Generate unique filename with .webp extension
+    const fileName = `${crypto.randomUUID()}.webp`
+    const filePath = `recommendations/${fileName}`
+
+    console.log('Uploading WebP image:', filePath, 'Size:', processedImage.length)
+
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
       .from('recommendations-images')
-      .upload(filePath, buffer, {
-        contentType: file.type,
+      .upload(filePath, processedImage, {
+        contentType: 'image/webp',
         cacheControl: '3600',
         upsert: false,
       })
