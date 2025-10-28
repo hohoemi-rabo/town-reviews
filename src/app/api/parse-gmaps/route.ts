@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseGoogleMapsLink } from '@/lib/google-maps'
 
+// Expand shortened URL to full URL
+async function expandShortenedUrl(url: string): Promise<string> {
+  try {
+    // Check if it's a shortened URL
+    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl/maps')) {
+      const response = await fetch(url, {
+        method: 'HEAD',
+        redirect: 'follow',
+      })
+      return response.url
+    }
+    return url
+  } catch (error) {
+    console.error('Error expanding URL:', error)
+    return url
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { url } = await request.json()
@@ -12,18 +30,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('Original URL:', url)
+
+    // Expand shortened URL if necessary
+    const expandedUrl = await expandShortenedUrl(url)
+    console.log('Expanded URL:', expandedUrl)
+
     // Extract Place ID from URL
-    const placeId = parseGoogleMapsLink(url)
+    let placeId = parseGoogleMapsLink(expandedUrl)
+    console.log('Extracted Place ID:', placeId)
 
-    if (!placeId) {
-      return NextResponse.json(
-        { error: '有効なGoogle MapsのURLではありません' },
-        { status: 400 }
-      )
-    }
-
-    // Fetch place details from Google Places API
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    // Get API key (use server-side key if available, otherwise fallback to public key)
+    const apiKey = process.env.GOOGLE_MAPS_SERVER_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
     if (!apiKey) {
       return NextResponse.json(
@@ -32,6 +50,64 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('Using API key:', apiKey ? 'Key is set' : 'No key found')
+
+    // If Place ID not found, try to extract coordinates and use Text Search API
+    if (!placeId) {
+      console.log('Place ID not found, trying to extract coordinates...')
+
+      // Extract coordinates from URL (format: /@lat,lng,zoom)
+      const coordMatch = expandedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+
+      if (coordMatch) {
+        const lat = parseFloat(coordMatch[1])
+        const lng = parseFloat(coordMatch[2])
+        console.log('Extracted coordinates:', lat, lng)
+
+        // Extract place name from URL (between /place/ and /@)
+        const nameMatch = expandedUrl.match(/\/place\/([^/@]+)/)
+        let placeName = 'Unknown'
+        if (nameMatch) {
+          placeName = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '))
+          console.log('Extracted place name:', placeName)
+        }
+
+        // Use Find Place from Text API to find the place
+        const findPlaceUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(placeName)}&inputtype=textquery&locationbias=point:${lat},${lng}&fields=place_id,name&key=${apiKey}&language=ja`
+
+        console.log('Calling Find Place from Text API...')
+        const searchResponse = await fetch(findPlaceUrl)
+        const searchData = await searchResponse.json()
+
+        console.log('Find Place API response:', searchData.status)
+
+        if (searchData.status === 'OK' && searchData.candidates && searchData.candidates.length > 0) {
+          placeId = searchData.candidates[0].place_id
+          console.log('Found Place ID from Find Place:', placeId)
+        } else if (searchData.status === 'REQUEST_DENIED') {
+          console.error('API error details:', searchData)
+          return NextResponse.json(
+            {
+              error: 'Google Places APIの設定に問題があります。Google Cloud ConsoleでPlaces APIが有効になっているか確認してください。',
+              details: searchData.error_message
+            },
+            { status: 500 }
+          )
+        } else {
+          return NextResponse.json(
+            { error: 'スポット情報が見つかりませんでした' },
+            { status: 400 }
+          )
+        }
+      } else {
+        return NextResponse.json(
+          { error: '有効なGoogle MapsのURLではありません' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Fetch place details from Google Places API
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,geometry,types&key=${apiKey}&language=ja`
     )

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Map from '@/components/Map/Map'
 import ReviewList from '@/components/ReviewCard/ReviewList'
+import PostModal from '@/components/PostModal/PostModal'
 
 // Sample data for demonstration
 const sampleReviews = [
@@ -67,6 +68,12 @@ const sampleReviews = [
 
 export default function Home() {
   const [showMap, setShowMap] = useState(true)
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false)
+
+  const handlePostSuccess = () => {
+    // TODO: Refresh review list in Phase 2
+    alert('投稿が完了しました！')
+  }
 
   return (
     <main className="h-screen w-screen flex flex-col overflow-hidden">
@@ -75,12 +82,21 @@ export default function Home() {
           <h1 className="text-xl sm:text-2xl font-bold text-washi-green">
             まち口コミ帳
           </h1>
-          <button
-            onClick={() => setShowMap(!showMap)}
-            className="px-4 py-2 bg-washi-green text-white rounded-lg hover:bg-washi-green-light transition-colors"
-          >
-            {showMap ? '📋 リスト表示' : '🗺️ 地図表示'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsPostModalOpen(true)}
+              className="px-4 py-2 bg-washi-orange text-white rounded-lg hover:bg-washi-orange-light transition-colors font-bold flex items-center gap-2"
+            >
+              <span>✏️</span>
+              <span className="hidden sm:inline">口コミ投稿</span>
+            </button>
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className="px-4 py-2 bg-washi-green text-white rounded-lg hover:bg-washi-green-light transition-colors"
+            >
+              {showMap ? '📋 リスト表示' : '🗺️ 地図表示'}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -99,6 +115,13 @@ export default function Home() {
           <ReviewList initialReviews={sampleReviews as any} />
         </div>
       )}
+
+      {/* Post Modal */}
+      <PostModal
+        isOpen={isPostModalOpen}
+        onClose={() => setIsPostModalOpen(false)}
+        onSubmitSuccess={handlePostSuccess}
+      />
     </main>
   )
 }

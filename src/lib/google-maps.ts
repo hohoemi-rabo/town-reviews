@@ -39,10 +39,14 @@ export function loadGoogleMapsScript(): Promise<void> {
 // Parse Google Maps link to extract Place ID
 export function parseGoogleMapsLink(url: string): string | null {
   try {
+    // Patterns to extract Place ID from various URL formats
     const patterns = [
-      /maps\/place\/[^/]+\/[^/]+\/@[^/]+\/data=.*!1s([^!]+)/,
-      /place_id=([^&]+)/,
-      /\/place\/([^/]+)/,
+      // Full URL with data parameter: https://www.google.com/maps/place/.../@.../data=...!1sChIJ...
+      /!1s(ChIJ[a-zA-Z0-9_-]+)/,
+      // Query parameter: ?place_id=ChIJ...
+      /place_id=(ChIJ[a-zA-Z0-9_-]+)/,
+      // CID format: /data=...!3m1!4b1!4m...!3m...!1s0x...:0x...
+      /1s0x[a-f0-9]+:0x[a-f0-9]+/,
     ]
 
     for (const pattern of patterns) {
@@ -52,6 +56,8 @@ export function parseGoogleMapsLink(url: string): string | null {
       }
     }
 
+    // If no match found, the URL might be a shortened URL
+    // In this case, return null and let the API handle it
     return null
   } catch (error) {
     console.error('Error parsing Google Maps link:', error)
