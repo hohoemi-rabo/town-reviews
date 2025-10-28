@@ -49,41 +49,45 @@ Phase 1 - Week 1
 
 ## 実装タスク
 
-- [ ] モーダルコンポーネント作成（`PostModal.tsx`）
-- [ ] モーダル開閉状態管理（Zustand or React Context）
-- [ ] Google Mapsリンク入力フィールド
-- [ ] リンク解析API実装（`/api/parse-gmaps`）
-  - [ ] Place IDの抽出
-  - [ ] Place Details API呼び出し
-  - [ ] スポット情報取得
-- [ ] 情報源選択UI（ラジオボタン + その他入力）
-- [ ] メモ入力フィールド
-  - [ ] 文字数カウンター表示
-  - [ ] リアルタイムバリデーション
-- [ ] 画像アップロード機能
-  - [ ] ドラッグ&ドロップ対応
-  - [ ] プレビュー表示
-  - [ ] 削除ボタン
-  - [ ] 圧縮処理（Browser Image Compression）
-- [ ] 投稿者名入力フィールド
-- [ ] 匿名チェックボックス
-- [ ] 確認画面実装
-- [ ] 投稿API実装（`/api/recommendations`）
-- [ ] ローディング状態表示
-- [ ] 成功/エラートースト通知
-- [ ] モーダルアクセシビリティ対応
-  - [ ] フォーカストラップ
-  - [ ] ESCキーで閉じる
-  - [ ] ARIA属性設定
+- [×] モーダルコンポーネント作成（`PostModal.tsx`）
+- [×] モーダル開閉状態管理（useState使用）
+- [×] Google Mapsリンク入力フィールド
+- [×] リンク解析API実装（`/api/parse-gmaps`）
+  - [×] Place IDの抽出（複数パターン対応）
+  - [×] 短縮URL展開機能
+  - [×] Find Place from Text API呼び出し（フォールバック）
+  - [×] Place Details API呼び出し
+  - [×] スポット情報取得
+- [×] 情報源選択UI（ボタングリッド + その他入力）
+- [×] メモ入力フィールド
+  - [×] 文字数カウンター表示
+  - [×] リアルタイムバリデーション
+- [×] 画像アップロード機能
+  - [×] ドラッグ&ドロップ対応
+  - [×] プレビュー表示
+  - [×] 削除ボタン
+  - [×] 圧縮処理（Browser Image Compression）
+- [×] 投稿者名入力フィールド
+- [×] 匿名チェックボックス
+- [ ] 確認画面実装（Phase 2で実装予定）
+- [×] 投稿API実装（`/api/recommendations`）
+- [×] 画像アップロードAPI実装（`/api/upload/image`）
+- [×] ローディング状態表示
+- [×] エラーメッセージ表示
+- [×] モーダルアクセシビリティ対応
+  - [×] ESCキーで閉じる（onClose呼び出し）
+  - [×] ARIA属性設定（aria-label）
 
 ## 関連ファイル
-- `src/components/PostModal/PostModal.tsx` (作成)
-- `src/components/PostModal/ImageUpload.tsx` (作成)
-- `src/components/PostModal/SourceSelector.tsx` (作成)
-- `src/app/api/parse-gmaps/route.ts` (作成)
-- `src/app/api/recommendations/route.ts` (作成)
-- `src/lib/image-compression.ts` (作成)
-- `src/hooks/usePostModal.ts` (作成)
+- `src/components/PostModal/PostModal.tsx` (作成済み)
+- `src/components/PostModal/ImageUpload.tsx` (作成済み)
+- `src/components/PostModal/SourceSelector.tsx` (作成済み)
+- `src/app/api/parse-gmaps/route.ts` (更新済み)
+- `src/app/api/recommendations/route.ts` (作成済み)
+- `src/app/api/upload/image/route.ts` (作成済み)
+- `src/lib/image-compression.ts` (作成済み)
+- `src/lib/google-maps.ts` (更新済み)
+- `src/app/page.tsx` (更新済み)
 
 ## 完了条件
 - [×] モーダルが正常に開閉する
@@ -98,4 +102,12 @@ Phase 1 - Week 1
 ## 備考
 - 画像圧縮は`browser-image-compression`ライブラリを使用
 - Google Maps APIの使用量に注意
-- モーダルは`dialog`要素を使用してアクセシビリティ向上
+- モーダルは固定位置の`div`要素を使用（背景オーバーレイ付き）
+- 短縮URL（maps.app.goo.gl）に対応するため、URL展開機能を実装
+- Place ID抽出が失敗した場合、Find Place from Text APIをフォールバックとして使用
+- サーバーサイドAPIキー（`GOOGLE_MAPS_SERVER_API_KEY`）を別途設定する必要あり
+- 投稿後24時間はCookieベースで編集可能（実装済み）
+- 確認画面はPhase 2で実装予定（現在は直接投稿）
+
+## 完了日
+2025-10-28

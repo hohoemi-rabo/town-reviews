@@ -28,14 +28,14 @@
 ## Phase 1: MVP開発（2-3週間）
 
 ### Week 1: 基本UI実装
-- [001_project_setup.md](./001_project_setup.md) - プロジェクトセットアップ 🔴
-- [003_map_display.md](./003_map_display.md) - 地図表示機能 🔴
-- [004_review_card_ui.md](./004_review_card_ui.md) - カード型口コミ表示UI 🔴
-- [005_post_modal.md](./005_post_modal.md) - 投稿モーダル機能 🔴
+- [001_project_setup.md](./001_project_setup.md) - プロジェクトセットアップ ✅ **完了**
+- [002_database_design.md](./002_database_design.md) - データベース設計とSupabase連携 ✅ **完了**
+- [003_map_display.md](./003_map_display.md) - 地図表示機能 ✅ **完了**
+- [004_review_card_ui.md](./004_review_card_ui.md) - カード型口コミ表示UI ✅ **完了**
+- [005_post_modal.md](./005_post_modal.md) - 投稿モーダル機能 ✅ **完了**
 
 ### Week 2: バックエンド実装
-- [002_database_design.md](./002_database_design.md) - データベース設計とSupabase連携 🔴
-- [006_image_upload.md](./006_image_upload.md) - 画像アップロード機能 🔴
+- [006_image_upload.md](./006_image_upload.md) - 画像アップロード機能 🔴 *(005で実装済み)*
 
 ### Week 3: 仕上げ
 - [007_reaction_feature.md](./007_reaction_feature.md) - リアクション機能 🟡
