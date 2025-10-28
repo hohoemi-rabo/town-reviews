@@ -36,7 +36,7 @@ npm start
 npm run lint
 ```
 
-Development server runs on http://localhost:3000
+Development server runs on http://localhost:3000 (or available port if 3000 is in use)
 
 ## Project Structure
 
@@ -63,8 +63,9 @@ REQUIREMENTS.md     - Full requirements specification
 
 - `tsconfig.json` - TypeScript strict mode, target ES2017
 - `tailwind.config.ts` - Configured for `/src/**/*.{js,ts,jsx,tsx,mdx}`
-  - Custom colors: `background`, `foreground` (CSS variables)
-  - Custom fonts: Geist Sans (planned: Zen Maru Gothic for Japanese UI)
+  - Custom washi theme colors: beige, green, orange variants
+  - Custom font: Zen Maru Gothic (via Google Fonts)
+  - Custom shadow: `shadow-washi` for soft paper-like effect
 - `next.config.ts` - Next.js configuration (minimal, will expand with CSP headers)
 - `eslint.config.mjs` - ESLint with Next.js config
 - `postcss.config.mjs` - PostCSS with Tailwind and Autoprefixer
@@ -96,11 +97,11 @@ This project uses Supabase for backend operations:
 - `monthly_digests` - AI-generated monthly summaries
 
 ### API Routes Structure
-- `/api/parse-gmaps` - Parse Google Maps links
-- `/api/recommendations` - CRUD for reviews
-- `/api/reactions` - Manage reactions
-- `/api/ai/*` - AI features (tone conversion, tag generation)
-- `/api/upload/image` - Image upload to Supabase Storage
+- `/api/parse-gmaps` - Parse Google Maps links, extract Place ID, fetch place details
+- `/api/recommendations` - CRUD for reviews (planned)
+- `/api/reactions` - Manage reactions (planned)
+- `/api/ai/*` - AI features: tone conversion, tag generation (planned)
+- `/api/upload/image` - Image upload to Supabase Storage (planned)
 
 ## Project-Specific Conventions
 
@@ -136,6 +137,28 @@ This project uses Supabase for backend operations:
 - TypeScript strict mode enforced - all code must be type-safe
 - Tailwind classes scoped to `/src/` directory only
 - No test framework configured yet (add in Phase 2)
+- Development server may use different ports (3001, 3002, 3003) if 3000 is occupied
+- Environment variable changes require server restart to take effect
+
+## Key Components and Utilities
+
+### Components
+- `Map/Map.tsx` - Google Maps with clustering, current location, category-colored pins
+- `ReviewCard/*` - Card UI with images, tags, reactions, source attribution
+- `PostModal/*` - Post creation flow (WIP - SourceSelector complete)
+
+### Utilities
+- `lib/google-maps.ts` - Map initialization, link parsing, default settings
+- `lib/formatters.ts` - Time formatting, icons, tag colors, season emojis
+- `lib/image-compression.ts` - Image validation, compression (browser-image-compression)
+- `lib/supabase/` - Client and server-side Supabase clients
+- `styles/map-styles.ts` - Custom washi-themed Google Maps styles
+
+### Important Patterns
+- Main page (`app/page.tsx`) has map/list toggle view with sample data
+- All marker icons use `google.maps.SymbolPath.CIRCLE` with category-specific colors
+- Review cards support infinite scroll via Intersection Observer
+- Image compression before upload: max 1MB, 1920px, JPEG/PNG only
 
 ## Development Workflow
 
@@ -163,6 +186,14 @@ Development is organized into feature tickets in `/docs`:
 - **Phase 1 (MVP)**: Tickets 001-009 - Core functionality for initial release
 - **Phase 2 (Beta)**: Tickets 010-012 - AI features and optimization
 - **Continuous**: Tickets 013-015 - Security, accessibility, legal compliance
+
+### Current Implementation Status (as of latest commit)
+- ✅ **Ticket 001**: Project setup complete
+- ✅ **Ticket 002**: Database schema with 4 tables (places, recommendations, reactions, monthly_digests)
+- ✅ **Ticket 003**: Google Maps display with clustering and current location marker
+- ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, reactions
+- 🔨 **Ticket 005 (WIP)**: Post modal - foundation complete (parse API, image compression, source selector)
+  - Still needed: Image upload component, modal UI, post API, page integration
 
 ## Next.js App Router Best Practices
 
