@@ -4,12 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15.5.6 project for town reviews, using:
+**まち口コミ帳** - A location-based community review platform for the Minami-Shinshu region (Iida/Shimoina area) in Japan.
+
+### Core Concept
+Digitally visualize local word-of-mouth culture by preserving "who told you about it" alongside location reviews on a map.
+
+### Tech Stack
+- Next.js 15.5.6
 - React 19.1.0
 - TypeScript (strict mode enabled)
 - Tailwind CSS 3.4.17
 - Turbopack (Next.js bundler)
 - App Router architecture
+- Supabase (PostgreSQL + Storage)
+- Google Maps JavaScript API
+- OpenAI API (GPT-4o-mini)
 
 ## Development Commands
 
@@ -31,33 +40,129 @@ Development server runs on http://localhost:3000
 
 ## Project Structure
 
-- `/src/app/` - Next.js App Router pages and layouts
-  - `layout.tsx` - Root layout with Geist font configuration
-  - `page.tsx` - Home page
-  - `globals.css` - Global styles with Tailwind directives
+```
+/src
+  /app              - Next.js App Router (pages, layouts, API routes)
+  /components       - Reusable React components
+  /lib              - Utility functions and shared logic
+  /types            - TypeScript type definitions
+/docs               - Feature tickets and development documentation
+  README.md         - Ticket index and priorities
+  001-015_*.md      - Individual feature tickets with todos
+/supabase
+  /migrations       - Database migration files
+REQUIREMENTS.md     - Full requirements specification
+```
+
+**Key conventions:**
 - TypeScript path alias: `@/*` maps to `./src/*`
+- All components default to Server Components unless `'use client'` directive
+- Database types auto-generated: `src/types/database.types.ts`
 
 ## Configuration Files
 
-- `tsconfig.json` - TypeScript config with strict mode, target ES2017
-- `tailwind.config.ts` - Tailwind configured for `/src/**/*.{js,ts,jsx,tsx,mdx}`
+- `tsconfig.json` - TypeScript strict mode, target ES2017
+- `tailwind.config.ts` - Configured for `/src/**/*.{js,ts,jsx,tsx,mdx}`
   - Custom colors: `background`, `foreground` (CSS variables)
-  - Custom fonts: Geist Sans and Geist Mono
-- `next.config.ts` - Next.js configuration (currently minimal)
+  - Custom fonts: Geist Sans (planned: Zen Maru Gothic for Japanese UI)
+- `next.config.ts` - Next.js configuration (minimal, will expand with CSP headers)
 - `eslint.config.mjs` - ESLint with Next.js config
 - `postcss.config.mjs` - PostCSS with Tailwind and Autoprefixer
 
-## Supabase Integration
+### Environment Variables Required
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+OPENAI_API_KEY=
+ADMIN_PASSWORD=              # For admin panel authentication
+```
 
-This project uses Supabase MCP server for backend operations:
-- Configuration file: `.mcp.json` (contains API tokens - **NEVER commit this file**)
+## Backend Architecture
+
+### Supabase Integration
+This project uses Supabase for backend operations:
+- **Database**: PostgreSQL with Row Level Security (RLS)
+- **Storage**: Image uploads (recommendations-images bucket)
+- **Real-time**: Reaction updates via Supabase Realtime
+- Configuration: `.mcp.json` (contains API tokens - **NEVER commit this file**)
 - `.mcp.json` is already in `.gitignore`
 
-## Important Notes
+### Database Schema (Key Tables)
+- `places` - Location information (Google Place ID, coordinates, category)
+- `recommendations` - User reviews with source attribution
+- `reactions` - Emoji reactions (ほっこり, 行ってみたい, メモした)
+- `monthly_digests` - AI-generated monthly summaries
+
+### API Routes Structure
+- `/api/parse-gmaps` - Parse Google Maps links
+- `/api/recommendations` - CRUD for reviews
+- `/api/reactions` - Manage reactions
+- `/api/ai/*` - AI features (tone conversion, tag generation)
+- `/api/upload/image` - Image upload to Supabase Storage
+
+## Project-Specific Conventions
+
+### Design System
+- **Theme**: Washi (Japanese paper) aesthetic with craft paper warmth
+- **Colors**: Earth tones (Beige × Deep Green × Persimmon Orange)
+- **Font**: Zen Maru Gothic (rounded, soft Japanese typeface)
+- **Animations**: Soft, gentle movements with stamp-like effects
+
+### Data Flow Patterns
+1. **Post Creation**: Google Maps link → Parse API → Supabase → Optional AI processing
+2. **Map Display**: Supabase → Filter/Cluster → Google Maps markers (color by category)
+3. **Reactions**: LocalStorage (user ID) + Supabase Realtime for live updates
+4. **Image Upload**: Client compression → Supabase Storage → WebP conversion
+
+### Key Features
+- **No authentication required** for posting (cookie-based edit window: 24h)
+- **Source attribution**: Who told you about this place (家族, 友人, 近所の人, etc.)
+- **Category-based pin colors**: 飲食=Orange, 体験=Blue, 自然=Green, 温泉=Brown
+- **AI features**: Tone softening, auto-tag generation, monthly digest reports
+- **Mobile-first**: Optimized for 60+ age users with accessibility focus
+
+### Security Notes
+- IP addresses are SHA-256 hashed, never stored raw
+- Image uploads: Max 3 per post, 5MB each, JPEG/PNG only
+- Rate limiting on API routes (especially AI endpoints)
+- CSP headers prevent XSS attacks
+- Admin panel protected by environment variable password
+
+## Important Build Notes
 
 - All builds use Turbopack for faster compilation
-- Project uses TypeScript strict mode - all code must be type-safe
-- Tailwind classes are scoped to `/src/` directory only
+- TypeScript strict mode enforced - all code must be type-safe
+- Tailwind classes scoped to `/src/` directory only
+- No test framework configured yet (add in Phase 2)
+
+## Development Workflow
+
+### Feature Tickets and Todo Management
+Development is organized into feature tickets in `/docs`:
+- View all tickets and priorities in `/docs/README.md`
+- Each ticket follows format: `{number}_{feature_name}.md`
+- Tickets include: overview, priority, time estimate, phase, specs, tasks, files, completion criteria
+
+### Todo Format
+```markdown
+- [ ] Incomplete task
+- [×] Completed task
+```
+**Critical**: Always update `- [ ]` to `- [×]` when completing tasks
+
+### Development Process
+1. Check `/docs/README.md` for ticket priorities (🔴 Critical, 🟡 High, 🟢 Medium)
+2. Open relevant ticket for detailed specs and implementation tasks
+3. Implement features following the ticket's task list
+4. Mark completed tasks with `- [×]`
+5. Verify all completion criteria before marking ticket as done
+
+### Phase Priority
+- **Phase 1 (MVP)**: Tickets 001-009 - Core functionality for initial release
+- **Phase 2 (Beta)**: Tickets 010-012 - AI features and optimization
+- **Continuous**: Tickets 013-015 - Security, accessibility, legal compliance
 
 ## Next.js App Router Best Practices
 
