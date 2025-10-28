@@ -75,10 +75,15 @@ REQUIREMENTS.md     - Full requirements specification
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=      # Client-side (with referer restrictions)
+GOOGLE_MAPS_SERVER_API_KEY=            # Server-side (no referer restrictions) - REQUIRED
 OPENAI_API_KEY=
-ADMIN_PASSWORD=              # For admin panel authentication
+ADMIN_PASSWORD=                        # For admin panel authentication
 ```
+
+**Important**: Two Google Maps API keys are required:
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - For browser usage (Map display)
+- `GOOGLE_MAPS_SERVER_API_KEY` - For API routes (Place Details, Find Place APIs)
 
 ## Backend Architecture
 
@@ -97,11 +102,14 @@ This project uses Supabase for backend operations:
 - `monthly_digests` - AI-generated monthly summaries
 
 ### API Routes Structure
-- `/api/parse-gmaps` - Parse Google Maps links, extract Place ID, fetch place details
-- `/api/recommendations` - CRUD for reviews (planned)
+- `/api/parse-gmaps` - Parse Google Maps links (supports shortened URLs), extract Place ID, fetch place details
+  - Supports `maps.app.goo.gl` shortened URLs
+  - Falls back to Find Place from Text API if Place ID not found
+- `/api/recommendations` - POST: Create new recommendation with validation
+- `/api/upload/image` - POST: Upload and convert images to WebP (max 1200px, quality 80%)
+- `/api/upload/image/[path]` - DELETE: Remove images from storage
 - `/api/reactions` - Manage reactions (planned)
-- `/api/ai/*` - AI features: tone conversion, tag generation (planned)
-- `/api/upload/image` - Image upload to Supabase Storage (planned)
+- `/api/ai/*` - AI features: tone conversion, tag generation (Phase 2)
 
 ## Project-Specific Conventions
 
@@ -112,10 +120,16 @@ This project uses Supabase for backend operations:
 - **Animations**: Soft, gentle movements with stamp-like effects
 
 ### Data Flow Patterns
-1. **Post Creation**: Google Maps link → Parse API → Supabase → Optional AI processing
+1. **Post Creation**:
+   - User inputs Google Maps URL (including shortened URLs)
+   - Parse API expands URL and extracts Place ID or uses Find Place API
+   - Images uploaded via `/api/upload/image` (compressed + WebP conversion)
+   - Data saved to Supabase with cookie for 24h edit window
 2. **Map Display**: Supabase → Filter/Cluster → Google Maps markers (color by category)
-3. **Reactions**: LocalStorage (user ID) + Supabase Realtime for live updates
-4. **Image Upload**: Client compression → Supabase Storage → WebP conversion
+3. **Reactions**: LocalStorage (user ID) + Supabase Realtime for live updates (planned)
+4. **Image Processing**:
+   - Client: browser-image-compression (max 1MB, 1920px)
+   - Server: sharp (resize to 1200px, convert to WebP at 80% quality)
 
 ### Key Features
 - **No authentication required** for posting (cookie-based edit window: 24h)
@@ -143,22 +157,26 @@ This project uses Supabase for backend operations:
 ## Key Components and Utilities
 
 ### Components
-- `Map/Map.tsx` - Google Maps with clustering, current location, category-colored pins
-- `ReviewCard/*` - Card UI with images, tags, reactions, source attribution
-- `PostModal/*` - Post creation flow (WIP - SourceSelector complete)
+- `Map/Map.tsx` - Google Maps with clustering, current location marker, category-colored pins
+- `ReviewCard/*` - Card UI with optimized images, tags, reactions, source attribution, infinite scroll
+- `PostModal/PostModal.tsx` - 2-step post creation (URL input → form)
+- `PostModal/ImageUpload.tsx` - Drag & drop image upload with compression and preview
+- `PostModal/SourceSelector.tsx` - Information source selection (6 presets + other)
 
 ### Utilities
-- `lib/google-maps.ts` - Map initialization, link parsing, default settings
-- `lib/formatters.ts` - Time formatting, icons, tag colors, season emojis
-- `lib/image-compression.ts` - Image validation, compression (browser-image-compression)
-- `lib/supabase/` - Client and server-side Supabase clients
+- `lib/google-maps.ts` - Map initialization, link parsing (supports shortened URLs), default settings
+- `lib/formatters.ts` - Time formatting, icons (heard_from, category), tag colors
+- `lib/image-compression.ts` - Client-side image validation and compression
+- `lib/supabase/client.ts` - Browser-side Supabase client
+- `lib/supabase/server.ts` - Server-side Supabase client (with Next.js 15 async cookies)
 - `styles/map-styles.ts` - Custom washi-themed Google Maps styles
 
 ### Important Patterns
-- Main page (`app/page.tsx`) has map/list toggle view with sample data
+- Main page (`app/page.tsx`) has map/list toggle view (currently with sample data)
 - All marker icons use `google.maps.SymbolPath.CIRCLE` with category-specific colors
-- Review cards support infinite scroll via Intersection Observer
-- Image compression before upload: max 1MB, 1920px, JPEG/PNG only
+- Review cards use Next.js Image with blur placeholder and loading animation
+- Image upload: Client compression → Server WebP conversion → Supabase Storage
+- Cookie-based edit tracking: 24h window stored in `editable_posts` cookie
 
 ## Development Workflow
 
@@ -187,13 +205,19 @@ Development is organized into feature tickets in `/docs`:
 - **Phase 2 (Beta)**: Tickets 010-012 - AI features and optimization
 - **Continuous**: Tickets 013-015 - Security, accessibility, legal compliance
 
-### Current Implementation Status (as of latest commit)
-- ✅ **Ticket 001**: Project setup complete
-- ✅ **Ticket 002**: Database schema with 4 tables (places, recommendations, reactions, monthly_digests)
-- ✅ **Ticket 003**: Google Maps display with clustering and current location marker
-- ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, reactions
-- 🔨 **Ticket 005 (WIP)**: Post modal - foundation complete (parse API, image compression, source selector)
-  - Still needed: Image upload component, modal UI, post API, page integration
+### Current Implementation Status
+**Phase 1 - MVP (Completed: Tickets 001-006)**
+- ✅ **Ticket 001**: Project setup with Next.js 15, Supabase, Google Maps
+- ✅ **Ticket 002**: Database schema with 4 tables + RLS policies
+- ✅ **Ticket 003**: Google Maps display with clustering, current location, category pins
+- ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, image optimization
+- ✅ **Ticket 005**: Post modal with Google Maps URL parser, source selector, image upload
+- ✅ **Ticket 006**: Image optimization with WebP conversion, blur placeholders, deletion API
+
+**Next Steps (Week 3: 仕上げ)**
+- 🟡 **Ticket 007**: Reaction feature (ほっこり, 行ってみたい, メモした buttons)
+- 🟡 **Ticket 008**: Search & filter (category, area, tags)
+- 🟡 **Ticket 009**: Admin panel (post management, statistics)
 
 ## Next.js App Router Best Practices
 
