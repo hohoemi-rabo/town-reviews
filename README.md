@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# まち口コミ帳
 
-## Getting Started
+地域の口コミ文化をデジタルで可視化し、「誰に教わったか」まで残す地図型レビューサービス
 
-First, run the development server:
+## 概要
+
+南信州（飯田・下伊那）地域の住民向けに、人づての情報の連鎖を地図上に残すWebサービスです。
+
+### 主な機能
+
+- 📍 Google Mapsベースの地図表示
+- 💬 情報源（誰から聞いたか）を含む口コミ投稿
+- 😊 リアクション機能（ほっこり、行ってみたい、メモした）
+- 🤖 AI機能（トーン変換、タグ自動生成）
+- 📊 月次レポート自動生成
+
+## 技術スタック
+
+- **Frontend**: Next.js 15.5.6, React 19.1.0, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + Storage)
+- **Maps**: Google Maps JavaScript API
+- **AI**: OpenAI API (GPT-4o-mini)
+
+## セットアップ
+
+### 1. 依存パッケージのインストール
+
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+
+`.env.local`ファイルを作成し、以下の環境変数を設定してください：
+
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Google Maps API
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+# OpenAI API
+OPENAI_API_KEY=your_openai_api_key
+
+# Admin Panel
+ADMIN_PASSWORD=your_admin_password
+```
+
+### 3. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 開発コマンド
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# 開発サーバー起動（Turbopack使用）
+npm run dev
 
-## Learn More
+# 本番ビルド
+npm run build
 
-To learn more about Next.js, take a look at the following resources:
+# 本番サーバー起動
+npm start
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# リンター実行
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## プロジェクト構造
 
-## Deploy on Vercel
+```
+/src
+  /app              - Next.js App Router (pages, layouts, API routes)
+  /components       - 再利用可能なReactコンポーネント
+  /lib              - ユーティリティ関数と共有ロジック
+  /types            - TypeScript型定義
+/docs               - 機能別チケットと開発ドキュメント
+/supabase
+  /migrations       - データベースマイグレーションファイル
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 開発ワークフロー
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `/docs/README.md`でチケット一覧と優先度を確認
+2. 該当チケットを開き、詳細仕様と実装タスクを確認
+3. タスクを実装し、完了したら`- [×]`にマーク
+4. すべての完了条件を満たしたらチケット完了
+
+詳細は[CLAUDE.md](./CLAUDE.md)を参照してください。
+
+## ドキュメント
+
+- [REQUIREMENTS.md](./REQUIREMENTS.md) - 要件定義書
+- [CLAUDE.md](./CLAUDE.md) - 開発ガイドライン
+- [/docs](./docs) - 機能別チケット
+
+## ライセンス
+
+Private

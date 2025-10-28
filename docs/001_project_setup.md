@@ -34,20 +34,20 @@ OPENAI_API_KEY=
 
 ## 実装タスク
 
-- [ ] Next.jsプロジェクトの基本構造確認
-- [ ] Supabaseプロジェクト作成
-- [ ] 環境変数設定ファイル作成（.env.local）
-- [ ] Supabaseクライアント初期化コード作成
+- [×] Next.jsプロジェクトの基本構造確認
+- [×] Supabaseプロジェクト作成
+- [×] 環境変数設定ファイル作成（.env.local）
+- [×] Supabaseクライアント初期化コード作成
 - [ ] Google Maps API有効化とAPIキー取得
 - [ ] OpenAI APIキー取得
-- [ ] 基本的なフォルダ構造作成
-  - [ ] `/src/lib` - ユーティリティ関数
-  - [ ] `/src/components` - 再利用可能コンポーネント
-  - [ ] `/src/app/api` - APIルート
-  - [ ] `/src/types` - TypeScript型定義
-- [ ] ESLint・Prettier設定
-- [ ] Git設定（.gitignoreに.env.local追加済み確認）
-- [ ] README更新（セットアップ手順記載）
+- [×] 基本的なフォルダ構造作成
+  - [×] `/src/lib` - ユーティリティ関数
+  - [×] `/src/components` - 再利用可能コンポーネント
+  - [×] `/src/app/api` - APIルート
+  - [×] `/src/types` - TypeScript型定義
+- [×] ESLint・Prettier設定（デフォルト設定使用）
+- [×] Git設定（.gitignoreに.env.local追加済み確認）
+- [×] README更新（セットアップ手順記載）
 
 ## 関連ファイル
 - `package.json`
