@@ -102,21 +102,21 @@ CREATE POLICY "Allow public insert" ON reactions FOR INSERT WITH CHECK (true);
 
 ## 実装タスク
 
-- [ ] Supabaseマイグレーションファイル作成
-- [ ] placesテーブル作成
-- [ ] recommendationsテーブル作成
-- [ ] reactionsテーブル作成
-- [ ] monthly_digestsテーブル作成
-- [ ] インデックス作成
-- [ ] RLSポリシー設定
-- [ ] TypeScript型定義ファイル生成
-  - [ ] `supabase gen types typescript`実行
-  - [ ] `src/types/database.types.ts`に保存
-- [ ] Supabaseクライアント関数作成
-  - [ ] `src/lib/supabase/client.ts`
-  - [ ] `src/lib/supabase/server.ts`
-- [ ] サンプルデータ投入スクリプト作成
-- [ ] マイグレーション実行確認
+- [×] Supabaseマイグレーションファイル作成
+- [×] placesテーブル作成
+- [×] recommendationsテーブル作成
+- [×] reactionsテーブル作成
+- [×] monthly_digestsテーブル作成
+- [×] インデックス作成
+- [×] RLSポリシー設定
+- [×] TypeScript型定義ファイル生成
+  - [×] `supabase gen types typescript`実行
+  - [×] `src/types/database.types.ts`に保存
+- [×] Supabaseクライアント関数作成
+  - [×] `src/lib/supabase/client.ts`
+  - [×] `src/lib/supabase/server.ts`
+- [ ] サンプルデータ投入スクリプト作成（オプション）
+- [×] マイグレーション実行確認
 
 ## 関連ファイル
 - `supabase/migrations/` (作成)
