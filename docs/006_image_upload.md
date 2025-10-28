@@ -44,38 +44,39 @@ recommendations/
 
 ## 実装タスク
 
-- [ ] Supabase Storageバケット作成
-  - [ ] `recommendations-images`バケット作成
-  - [ ] パブリックアクセス設定
-  - [ ] RLSポリシー設定
-- [ ] 画像圧縮機能実装
-  - [ ] `browser-image-compression`導入
-  - [ ] 圧縮設定（品質80%、最大幅1200px）
-- [ ] 画像アップロードAPI実装（`/api/upload/image`）
-  - [ ] マルチパートフォーム対応
-  - [ ] ファイルタイプ検証
-  - [ ] ファイルサイズ検証
-  - [ ] WebP変換処理
-  - [ ] Supabase Storageへアップロード
-- [ ] 画像削除API実装（`/api/upload/image/[id]`）
-- [ ] 画像プレビュー機能
-  - [ ] サムネイル生成
-  - [ ] プログレッシブ読み込み
-- [ ] エラーハンドリング
-  - [ ] ネットワークエラー
-  - [ ] ストレージ容量エラー
-  - [ ] 形式エラー
-- [ ] 画像最適化
-  - [ ] Next.js Image Componentの活用
-  - [ ] responsive images設定
-  - [ ] blur placeholder生成
+- [×] Supabase Storageバケット作成（チケット005で実装済み）
+  - [×] `recommendations-images`バケット作成
+  - [×] パブリックアクセス設定
+  - [×] RLSポリシー設定
+- [×] 画像圧縮機能実装（チケット005で実装済み）
+  - [×] `browser-image-compression`導入
+  - [×] 圧縮設定（品質80%、最大幅1200px）
+- [×] 画像アップロードAPI実装（`/api/upload/image`）
+  - [×] マルチパートフォーム対応
+  - [×] ファイルタイプ検証
+  - [×] ファイルサイズ検証
+  - [×] WebP変換処理（sharp使用）
+  - [×] Supabase Storageへアップロード
+- [×] 画像削除API実装（`/api/upload/image/[path]`）
+- [×] 画像プレビュー機能
+  - [×] サムネイル生成
+  - [×] プログレッシブ読み込み
+- [×] エラーハンドリング
+  - [×] ネットワークエラー
+  - [×] ストレージ容量エラー
+  - [×] 形式エラー
+- [×] 画像最適化
+  - [×] Next.js Image Componentの活用
+  - [×] responsive images設定
+  - [×] blur placeholder生成
 
 ## 関連ファイル
-- `src/app/api/upload/image/route.ts` (作成)
-- `src/app/api/upload/image/[id]/route.ts` (作成)
-- `src/lib/image-optimization.ts` (作成)
-- `src/components/ImageUpload/ImagePreview.tsx` (作成)
-- `supabase/storage/policies.sql` (作成)
+- `src/app/api/upload/image/route.ts` (更新済み - WebP変換追加)
+- `src/app/api/upload/image/[path]/route.ts` (作成済み - 削除API)
+- `src/components/PostModal/ImageUpload.tsx` (チケット005で作成済み)
+- `src/components/ReviewCard/ReviewImage.tsx` (更新済み - 最適化)
+- `src/lib/image-compression.ts` (チケット005で作成済み)
+- `next.config.ts` (更新済み - Supabaseドメイン許可)
 
 ## 完了条件
 - [×] 画像が正常にアップロードされる
@@ -88,5 +89,13 @@ recommendations/
 
 ## 備考
 - Supabase無料プランは1GBまで（監視必要）
-- WebP変換は`sharp`ライブラリを使用
-- 画像メタデータ（EXIF）は自動削除される
+- WebP変換は`sharp`ライブラリを使用（サーバーサイド処理）
+- 画像メタデータ（EXIF）はsharpにより自動削除される
+- クライアント側で`browser-image-compression`による事前圧縮も実施
+- Next.js Imageコンポーネントで自動最適化（WebP/AVIF対応）
+- blur placeholderでUX向上
+- 画像読み込み中はローディングアニメーション表示
+- チケット005で基本機能は実装済み、006で最適化を追加
+
+## 完了日
+2025-10-28
