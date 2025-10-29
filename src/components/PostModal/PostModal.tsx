@@ -4,6 +4,8 @@ import { useState, FormEvent } from 'react'
 import SourceSelector from './SourceSelector'
 import ImageUpload from './ImageUpload'
 import CategorySelector from './CategorySelector'
+import FacilitySearchInput, { type Facility } from './FacilitySearchInput'
+import FacilityRequestModal from './FacilityRequestModal'
 
 interface PostModalProps {
   isOpen: boolean
@@ -25,9 +27,9 @@ export default function PostModal({
   onClose,
   onSubmitSuccess,
 }: PostModalProps) {
-  const [step, setStep] = useState<'link' | 'form'>('link')
-  const [googleMapsUrl, setGoogleMapsUrl] = useState('')
+  const [step, setStep] = useState<'search' | 'form'>('search')
   const [placeData, setPlaceData] = useState<PlaceData | null>(null)
+  const [showRequestModal, setShowRequestModal] = useState(false)
 
   // Form state
   const [heardFromType, setHeardFromType] = useState('')
@@ -39,51 +41,26 @@ export default function PostModal({
   const [isAnonymous, setIsAnonymous] = useState(true)
 
   // UI state
-  const [isParsingUrl, setIsParsingUrl] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!isOpen) return null
 
-  const handleParseUrl = async () => {
-    if (!googleMapsUrl.trim()) {
-      setError('Google MapsのURLを入力してください')
-      return
-    }
+  const handleSelectFacility = (facility: Facility) => {
+    // Convert Facility to PlaceData format
+    setPlaceData({
+      placeId: facility.id, // Use database UUID as placeId
+      name: facility.name,
+      address: facility.address,
+      lat: facility.lat,
+      lng: facility.lng,
+      category: facility.category,
+    })
+    setStep('form')
+  }
 
-    setError(null)
-    setIsParsingUrl(true)
-
-    try {
-      console.log('Parsing URL:', googleMapsUrl)
-
-      const response = await fetch('/api/parse-gmaps', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: googleMapsUrl }),
-      })
-
-      console.log('Response status:', response.status)
-
-      const data = await response.json()
-      console.log('Response data:', data)
-
-      if (!response.ok) {
-        const errorMessage = data.error || 'URLの解析に失敗しました'
-        console.error('API error:', errorMessage)
-        setError(errorMessage)
-        return
-      }
-
-      setPlaceData(data)
-      setStep('form')
-    } catch (err) {
-      console.error('Parse URL error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'URLの解析に失敗しました'
-      setError(`エラー: ${errorMessage}`)
-    } finally {
-      setIsParsingUrl(false)
-    }
+  const handleRequestNewFacility = () => {
+    setShowRequestModal(true)
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -171,8 +148,7 @@ export default function PostModal({
   }
 
   const handleClose = () => {
-    setStep('link')
-    setGoogleMapsUrl('')
+    setStep('search')
     setPlaceData(null)
     setHeardFromType('')
     setHeardFrom('')
@@ -186,164 +162,155 @@ export default function PostModal({
   }
 
   const handleBack = () => {
-    setStep('link')
+    setStep('search')
     setPlaceData(null)
     setError(null)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-washi-green">
-            {step === 'link' ? '📍 スポットを選択' : '✍️ 口コミを投稿'}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors text-2xl"
-            aria-label="閉じる"
-          >
-            ✕
-          </button>
-        </div>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <h2 className="text-2xl font-bold text-washi-green">
+              {step === 'search' ? '📍 施設を選択' : '✍️ 口コミを投稿'}
+            </h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors text-2xl"
+              aria-label="閉じる"
+            >
+              ✕
+            </button>
+          </div>
 
-        {/* Content */}
-        <div className="px-6 py-6">
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {step === 'link' ? (
-            /* Step 1: Google Maps URL input */
-            <div className="space-y-4">
-              <div className="bg-washi-beige border-2 border-washi-green-light rounded-lg p-4">
-                <h3 className="font-bold text-washi-green mb-2">📱 使い方</h3>
-                <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                  <li>Google Mapsでスポットを検索</li>
-                  <li>「共有」ボタンからURLをコピー</li>
-                  <li>下の入力欄にURLを貼り付け</li>
-                </ol>
+          {/* Content */}
+          <div className="px-6 py-6">
+            {error && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-600">{error}</p>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Google Maps URL <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  value={googleMapsUrl}
-                  onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                  placeholder="https://maps.app.goo.gl/..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green"
-                  disabled={isParsingUrl}
+            {step === 'search' ? (
+              /* Step 1: Facility search */
+              <div className="space-y-4">
+                <div className="bg-washi-beige border-2 border-washi-green-light rounded-lg p-4">
+                  <h3 className="font-bold text-washi-green mb-2">💡 新しい投稿方法</h3>
+                  <p className="text-sm text-gray-700">
+                    施設名を検索して選択するだけ！
+                    <br />
+                    Google Mapsの操作は不要になりました。
+                  </p>
+                </div>
+
+                <FacilitySearchInput
+                  onSelectFacility={handleSelectFacility}
+                  onRequestNewFacility={handleRequestNewFacility}
                 />
               </div>
+            ) : (
+              /* Step 2: Review form */
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Place info */}
+                <div className="bg-washi-beige rounded-lg p-4 border-2 border-washi-green-light">
+                  <p className="text-sm text-gray-600 mb-1">投稿先の施設</p>
+                  <p className="font-bold text-washi-green text-lg">
+                    {placeData?.name}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">{placeData?.address}</p>
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="mt-2 text-sm text-washi-green hover:underline"
+                  >
+                    ← 別の施設を選択
+                  </button>
+                </div>
 
-              <button
-                onClick={handleParseUrl}
-                disabled={isParsingUrl}
-                className="w-full py-3 bg-washi-green text-white rounded-lg font-bold hover:bg-washi-green-light transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {isParsingUrl ? '解析中...' : '次へ'}
-              </button>
-            </div>
-          ) : (
-            /* Step 2: Review form */
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Place info */}
-              <div className="bg-washi-beige rounded-lg p-4 border-2 border-washi-green-light">
-                <p className="text-sm text-gray-600 mb-1">投稿先のスポット</p>
-                <p className="font-bold text-washi-green text-lg">
-                  {placeData?.name}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">{placeData?.address}</p>
+                {/* Source selector */}
+                <SourceSelector
+                  heardFromType={heardFromType}
+                  heardFrom={heardFrom}
+                  onHeardFromTypeChange={setHeardFromType}
+                  onHeardFromChange={setHeardFrom}
+                />
+
+                {/* Note input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    メモ <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="例: 手打ちそばが絶品！鴨南蛮がおすすめ。お店の雰囲気も落ち着いていて、ゆっくり食事ができます。"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green resize-none"
+                    rows={5}
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-gray-500 text-right">
+                    {note.length}/200文字
+                  </p>
+                </div>
+
+                {/* Image upload */}
+                <ImageUpload images={images} onImagesChange={setImages} />
+
+                {/* Category selector */}
+                <CategorySelector
+                  selectedCategory={reviewCategory}
+                  onCategoryChange={setReviewCategory}
+                />
+
+                {/* Author info */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-washi-green focus:ring-washi-green"
+                    />
+                    <span className="text-sm text-gray-700">匿名で投稿</span>
+                  </label>
+
+                  {!isAnonymous && (
+                    <input
+                      type="text"
+                      value={authorName}
+                      onChange={(e) => setAuthorName(e.target.value)}
+                      placeholder="投稿者名 (例: 山田)"
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green"
+                      maxLength={20}
+                    />
+                  )}
+                </div>
+
+                {/* Submit button */}
                 <button
-                  type="button"
-                  onClick={handleBack}
-                  className="mt-2 text-sm text-washi-green hover:underline"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 bg-washi-orange text-white rounded-lg font-bold hover:bg-washi-orange-light transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  ← 別のスポットを選択
+                  {isSubmitting ? '投稿中...' : '✨ 投稿する'}
                 </button>
-              </div>
 
-              {/* Source selector */}
-              <SourceSelector
-                heardFromType={heardFromType}
-                heardFrom={heardFrom}
-                onHeardFromTypeChange={setHeardFromType}
-                onHeardFromChange={setHeardFrom}
-              />
-
-              {/* Note input */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  メモ <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="例: 手打ちそばが絶品！鴨南蛮がおすすめ。お店の雰囲気も落ち着いていて、ゆっくり食事ができます。"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green resize-none"
-                  rows={5}
-                  maxLength={200}
-                />
-                <p className="text-xs text-gray-500 text-right">
-                  {note.length}/200文字
+                <p className="text-xs text-gray-500 text-center">
+                  投稿後24時間は編集・削除が可能です
                 </p>
-              </div>
-
-              {/* Image upload */}
-              <ImageUpload images={images} onImagesChange={setImages} />
-
-              {/* Category selector */}
-              <CategorySelector
-                selectedCategory={reviewCategory}
-                onCategoryChange={setReviewCategory}
-              />
-
-              {/* Author info */}
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-washi-green focus:ring-washi-green"
-                  />
-                  <span className="text-sm text-gray-700">匿名で投稿</span>
-                </label>
-
-                {!isAnonymous && (
-                  <input
-                    type="text"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    placeholder="投稿者名 (例: 山田)"
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green"
-                    maxLength={20}
-                  />
-                )}
-              </div>
-
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-washi-orange text-white rounded-lg font-bold hover:bg-washi-orange-light transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? '投稿中...' : '✨ 投稿する'}
-              </button>
-
-              <p className="text-xs text-gray-500 text-center">
-                投稿後24時間は編集・削除が可能です
-              </p>
-            </form>
-          )}
+              </form>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Facility Request Modal */}
+      <FacilityRequestModal
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+      />
+    </>
   )
 }

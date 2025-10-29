@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { generateSearchVariants } from '@/lib/text-utils'
 
 type SearchRequestBody = {
   query: string
@@ -13,12 +14,12 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as SearchRequestBody
     const { query, limit = 10, area, category } = body
 
-    // Validate query length (minimum 3 characters for performance)
-    if (!query || query.trim().length < 3) {
+    // Validate query length (minimum 2 characters for better UX)
+    if (!query || query.trim().length < 2) {
       return NextResponse.json(
         {
           success: false,
-          error: '検索キーワードは3文字以上で入力してください',
+          error: '検索キーワードは2文字以上で入力してください',
         },
         { status: 400 }
       )
@@ -26,7 +27,18 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient()
 
-    // Build query with pg_trgm similarity search
+    // Generate search variants (ひらがな, カタカナ, etc.)
+    const searchVariants = generateSearchVariants(query)
+
+    // Build OR conditions for all variants
+    const orConditions = searchVariants
+      .map((variant) => {
+        const term = `%${variant}%`
+        return `name.ilike.${term},name_kana.ilike.${term},address.ilike.${term},area.ilike.${term}`
+      })
+      .join(',')
+
+    // Build query
     let queryBuilder = supabase
       .from('places')
       .select(
@@ -54,13 +66,8 @@ export async function POST(req: NextRequest) {
       queryBuilder = queryBuilder.eq('category', category)
     }
 
-    // Use pg_trgm for fuzzy text search on name, address, and area
-    // Note: Supabase doesn't directly expose similarity(), so we use ilike for basic matching
-    // For production, consider using a full-text search or similarity function via RPC
-    const searchTerm = `%${query}%`
-    queryBuilder = queryBuilder.or(
-      `name.ilike.${searchTerm},address.ilike.${searchTerm},area.ilike.${searchTerm}`
-    )
+    // Search with multiple variants (ひらがな・カタカナ対応)
+    queryBuilder = queryBuilder.or(orConditions)
 
     // Order by name and limit results
     queryBuilder = queryBuilder.order('name', { ascending: true }).limit(limit)

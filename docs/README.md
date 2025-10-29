@@ -42,10 +42,16 @@
 
 ## Phase 1.5: UX改善（仕様変更）
 
-- [016_facility_database.md](./016_facility_database.md) - 施設データベース事前登録 & 検索機能 🔴 **最優先**
+- [016_facility_database.md](./016_facility_database.md) - 施設データベース事前登録 & 検索機能 ✅ **完了（Phase 1-3）**
 
 ### 背景
 Google Maps URL入力方式は高齢者には難しいため、施設を事前登録しキーワード検索で選択する方式に変更。投稿フローを大幅に簡略化。
+
+### 完了内容
+- ✅ Phase 1: データベース & API（施設検索API、施設追加リクエストAPI、RLSポリシー）
+- ✅ Phase 2: UI改修（FacilitySearchInput、FacilityRequestModal、PostModal改修、**ひらがな/カタカナ検索サポート追加**）
+- ✅ Phase 3: データ取得 & インポート（Google Places API、130件登録完了、CSV import/export）
+- ⏳ Phase 4: 管理画面拡張（未実装）
 
 ---
 

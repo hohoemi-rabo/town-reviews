@@ -362,21 +362,30 @@ const googleMapsUrl = place_id
   - [×] バリデーション
   - [×] エラーハンドリング
 
-### Phase 2: UI改修
-- [ ] PostModal大幅改修
-  - [ ] Step 1: 施設検索UI（Google Maps URL入力廃止）
-  - [ ] リアルタイムサジェスト実装
-  - [ ] 施設選択 → Step 2遷移
-  - [ ] 「施設追加リクエスト」ボタン
-- [ ] FacilitySearchInput コンポーネント作成
-  - [ ] 検索ボックス
-  - [ ] サジェストリスト
-  - [ ] デバウンス処理（300ms）
-  - [ ] キーボードナビゲーション
-- [ ] FacilityRequestModal コンポーネント作成
-  - [ ] リクエストフォーム
-  - [ ] バリデーション
-  - [ ] 送信確認メッセージ
+### Phase 2: UI改修 ✅ 完了
+- [×] PostModal大幅改修
+  - [×] Step 1: 施設検索UI（Google Maps URL入力廃止）
+  - [×] リアルタイムサジェスト実装
+  - [×] 施設選択 → Step 2遷移
+  - [×] 「施設追加リクエスト」ボタン
+- [×] FacilitySearchInput コンポーネント作成
+  - [×] 検索ボックス
+  - [×] サジェストリスト
+  - [×] デバウンス処理（300ms）
+  - [×] キーボードナビゲーション
+  - [×] 最小検索文字数を2文字に変更
+- [×] FacilityRequestModal コンポーネント作成
+  - [×] リクエストフォーム
+  - [×] バリデーション
+  - [×] 送信確認メッセージ
+- [×] ひらがな/カタカナ検索サポート
+  - [×] text-utils.ts作成（文字変換ユーティリティ）
+  - [×] name_kanaカラム追加（placesテーブル）
+  - [×] Kuroshiro + Kuromoji インストール
+  - [×] generate-kana.ts作成（自動ふりがな生成スクリプト）
+  - [×] 全施設（130件）にふりがな自動生成
+  - [×] 検索API更新（name_kana検索対応）
+  - [×] 検索テスト（"みかわ" → "三河家"）
 
 ### Phase 3: データ取得 & インポート ✅ 完了
 - [×] Google Places API一括取得スクリプト
@@ -431,7 +440,9 @@ const googleMapsUrl = place_id
 - `src/components/Admin/FacilityImport.tsx` - CSVインポート
 - `src/components/Admin/FacilityList.tsx` - 施設一覧管理
 - `src/lib/resend.ts` - Resendメール送信
+- `src/lib/text-utils.ts` - テキスト変換ユーティリティ（ひらがな/カタカナ）
 - `scripts/import-places.ts` - Google Places API一括取得スクリプト
+- `scripts/generate-kana.ts` - 施設名ふりがな自動生成スクリプト
 - `supabase/migrations/YYYYMMDD_add_facility_features.sql` - マイグレーション
 
 ### 修正
