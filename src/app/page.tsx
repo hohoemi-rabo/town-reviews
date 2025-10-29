@@ -20,22 +20,8 @@ export default function Home() {
       const { data, error } = await supabase
         .from('recommendations')
         .select(`
-          id,
-          place_id,
-          heard_from,
-          heard_from_type,
-          note_raw,
-          note_formatted,
-          tags,
-          season,
-          author_name,
-          author_ip_hash,
-          is_anonymous,
-          images,
-          created_at,
-          updated_at,
-          is_editable_until,
-          places (
+          *,
+          places:place_id (
             id,
             place_id,
             name,
@@ -55,14 +41,8 @@ export default function Home() {
       }
 
       if (data) {
-        // Transform places array to single object
-        const transformedData = data.map((item) => ({
-          ...item,
-          places: Array.isArray(item.places) && item.places.length > 0
-            ? item.places[0]
-            : null
-        })) as ExtendedRecommendation[]
-        setReviews(transformedData)
+        // places:place_id syntax returns single object, not array
+        setReviews(data as ExtendedRecommendation[])
       }
       setLoading(false)
     }
@@ -76,22 +56,8 @@ export default function Home() {
     supabase
       .from('recommendations')
       .select(`
-        id,
-        place_id,
-        heard_from,
-        heard_from_type,
-        note_raw,
-        note_formatted,
-        tags,
-        season,
-        author_name,
-        author_ip_hash,
-        is_anonymous,
-        images,
-        created_at,
-        updated_at,
-        is_editable_until,
-        places (
+        *,
+        places:place_id (
           id,
           place_id,
           name,
@@ -105,14 +71,8 @@ export default function Home() {
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         if (data) {
-          // Transform places array to single object
-          const transformedData = data.map((item) => ({
-            ...item,
-            places: Array.isArray(item.places) && item.places.length > 0
-              ? item.places[0]
-              : null
-          })) as ExtendedRecommendation[]
-          setReviews(transformedData)
+          // places:place_id syntax returns single object, not array
+          setReviews(data as ExtendedRecommendation[])
         }
       })
 

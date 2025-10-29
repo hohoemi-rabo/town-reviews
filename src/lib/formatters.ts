@@ -92,3 +92,29 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength) + '...'
 }
+
+// Get review category emoji
+export function getReviewCategoryEmoji(category: string): string {
+  const emojiMap: Record<string, string> = {
+    'グルメ': '🍴',
+    '景色': '🏞️',
+    '体験': '🎯',
+    '癒し': '♨️',
+    'その他': '📝',
+  }
+
+  return emojiMap[category] || '📝'
+}
+
+// Get review category color
+export function getReviewCategoryColor(category: string): string {
+  const colorMap: Record<string, string> = {
+    'グルメ': 'bg-orange-100 text-orange-700 border-orange-200',
+    '景色': 'bg-green-100 text-green-700 border-green-200',
+    '体験': 'bg-blue-100 text-blue-700 border-blue-200',
+    '癒し': 'bg-purple-100 text-purple-700 border-purple-200',
+    'その他': 'bg-gray-100 text-gray-700 border-gray-200',
+  }
+
+  return colorMap[category] || 'bg-gray-100 text-gray-700 border-gray-200'
+}

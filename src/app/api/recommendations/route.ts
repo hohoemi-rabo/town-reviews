@@ -15,15 +15,18 @@ interface PostRequestBody {
   heardFromType: string
   heardFrom: string
   note: string
+  reviewCategory: string
   images: string[]
   authorName: string | null
   isAnonymous: boolean
 }
 
+const VALID_REVIEW_CATEGORIES = ['グルメ', '景色', '体験', '癒し', 'その他'] as const
+
 export async function POST(request: NextRequest) {
   try {
     const body: PostRequestBody = await request.json()
-    const { place, heardFromType, heardFrom, note, images, authorName, isAnonymous } = body
+    const { place, heardFromType, heardFrom, note, reviewCategory, images, authorName, isAnonymous } = body
 
     // Validation
     if (!place || !place.placeId || !place.name) {
@@ -50,6 +53,13 @@ export async function POST(request: NextRequest) {
     if (!note.trim() || note.length > 200) {
       return NextResponse.json(
         { error: 'メモは1文字以上200文字以内で入力してください' },
+        { status: 400 }
+      )
+    }
+
+    if (!reviewCategory || !VALID_REVIEW_CATEGORIES.includes(reviewCategory as typeof VALID_REVIEW_CATEGORIES[number])) {
+      return NextResponse.json(
+        { error: '有効なカテゴリーを選択してください' },
         { status: 400 }
       )
     }
@@ -135,6 +145,7 @@ export async function POST(request: NextRequest) {
         heard_from_type: heardFromType,
         note_raw: note,
         note_formatted: note, // TODO: AI tone conversion in Phase 2
+        review_category: reviewCategory,
         tags: [], // TODO: AI tag generation in Phase 2
         season: null, // TODO: Can be extracted from note in Phase 2
         author_name: isAnonymous ? null : authorName,

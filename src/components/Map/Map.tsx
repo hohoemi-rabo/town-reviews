@@ -148,19 +148,21 @@ export default function Map({
     markersRef.current.forEach((marker) => marker.setMap(null))
     markersRef.current = []
 
-    // Create new markers
+    // Create new markers (square/memo style)
     const newMarkers = places.map((place) => {
       const marker = new google.maps.Marker({
         position: { lat: place.lat, lng: place.lng },
         map: mapInstanceRef.current!,
         title: place.name,
         icon: {
-          path: google.maps.SymbolPath.CIRCLE,
+          // Square path: M(move to) -size,-size L(line to) size,-size L size,size L -size,size Z(close)
+          path: 'M -12,-12 L 12,-12 L 12,12 L -12,12 Z',
           fillColor: place.category ? CATEGORY_COLORS[place.category as keyof typeof CATEGORY_COLORS] : '#FF8C00',
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2,
-          scale: 8,
+          fillOpacity: 0.95,
+          strokeColor: '#333333',
+          strokeWeight: 3,
+          scale: 1,
+          anchor: new google.maps.Point(0, 0),
         },
       })
 

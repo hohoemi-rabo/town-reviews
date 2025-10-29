@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import SourceSelector from './SourceSelector'
 import ImageUpload from './ImageUpload'
+import CategorySelector from './CategorySelector'
 
 interface PostModalProps {
   isOpen: boolean
@@ -32,6 +33,7 @@ export default function PostModal({
   const [heardFromType, setHeardFromType] = useState('')
   const [heardFrom, setHeardFrom] = useState('')
   const [note, setNote] = useState('')
+  const [reviewCategory, setReviewCategory] = useState('その他')
   const [images, setImages] = useState<File[]>([])
   const [authorName, setAuthorName] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(true)
@@ -144,6 +146,7 @@ export default function PostModal({
           heardFromType,
           heardFrom: heardFromType === 'その他' ? heardFrom : '',
           note,
+          reviewCategory,
           images: imageUrls,
           authorName: isAnonymous ? null : authorName,
           isAnonymous,
@@ -174,6 +177,7 @@ export default function PostModal({
     setHeardFromType('')
     setHeardFrom('')
     setNote('')
+    setReviewCategory('その他')
     setImages([])
     setAuthorName('')
     setIsAnonymous(true)
@@ -293,6 +297,12 @@ export default function PostModal({
 
               {/* Image upload */}
               <ImageUpload images={images} onImagesChange={setImages} />
+
+              {/* Category selector */}
+              <CategorySelector
+                selectedCategory={reviewCategory}
+                onCategoryChange={setReviewCategory}
+              />
 
               {/* Author info */}
               <div className="space-y-3">

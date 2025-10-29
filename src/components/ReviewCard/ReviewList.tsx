@@ -86,6 +86,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
             heardFrom={review.heard_from}
             heardFromType={review.heard_from_type}
             note={review.note_formatted || review.note_raw || ''}
+            reviewCategory={review.review_category || 'その他'}
             images={review.images || []}
             tags={review.tags || []}
             season={review.season}

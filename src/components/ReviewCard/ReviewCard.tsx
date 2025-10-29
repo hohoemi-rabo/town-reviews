@@ -4,6 +4,8 @@ import {
   formatRelativeTime,
   getHeardFromIcon,
   getSeasonEmoji,
+  getReviewCategoryEmoji,
+  getReviewCategoryColor,
   truncateText,
 } from '@/lib/formatters'
 import ReviewImage from './ReviewImage'
@@ -16,6 +18,7 @@ interface ReviewCardProps {
   heardFrom: string
   heardFromType: string
   note: string
+  reviewCategory: string
   images: string[]
   tags: string[]
   season: string | null
@@ -30,6 +33,7 @@ export default function ReviewCard({
   heardFrom,
   heardFromType,
   note,
+  reviewCategory,
   images,
   tags,
   season,
@@ -44,10 +48,19 @@ export default function ReviewCard({
       role="article"
       aria-label={`${spotName}の口コミ`}
     >
-      {/* Spot name */}
-      <h3 className="text-xl sm:text-2xl font-bold text-washi-green mb-2">
-        {spotName}
-      </h3>
+      {/* Spot name with category badge */}
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <h3 className="text-xl sm:text-2xl font-bold text-washi-green">
+          {spotName}
+        </h3>
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${getReviewCategoryColor(reviewCategory)}`}
+          aria-label={`カテゴリー: ${reviewCategory}`}
+        >
+          <span>{getReviewCategoryEmoji(reviewCategory)}</span>
+          <span>{reviewCategory}</span>
+        </span>
+      </div>
 
       {/* Heard from */}
       <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">

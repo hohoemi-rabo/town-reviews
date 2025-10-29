@@ -120,6 +120,7 @@ export type Database = {
           note_formatted: string | null
           note_raw: string | null
           place_id: string | null
+          review_category: string | null
           season: string | null
           tags: string[] | null
           updated_at: string | null
@@ -137,6 +138,7 @@ export type Database = {
           note_formatted?: string | null
           note_raw?: string | null
           place_id?: string | null
+          review_category?: string | null
           season?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -154,6 +156,7 @@ export type Database = {
           note_formatted?: string | null
           note_raw?: string | null
           place_id?: string | null
+          review_category?: string | null
           season?: string | null
           tags?: string[] | null
           updated_at?: string | null

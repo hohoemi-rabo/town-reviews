@@ -97,17 +97,21 @@ This project uses Supabase for backend operations:
 
 ### Database Schema (Key Tables)
 - `places` - Location information (Google Place ID, coordinates, category)
-- `recommendations` - User reviews with source attribution
+- `recommendations` - User reviews with source attribution and review categories
+  - Key fields: `heard_from`, `heard_from_type`, `note_raw`, `note_formatted`, `review_category`, `images`, `tags`, `season`
+  - `review_category`: 'グルメ', '景色', '体験', '癒し', 'その他' (with CHECK constraint)
+  - `is_editable_until`: 24-hour edit window timestamp
+  - `author_ip_hash`: SHA-256 hashed IP (never store raw IPs)
 - `reactions` - User reactions with columns: `id`, `recommendation_id`, `reaction_type`, `user_identifier`, `created_at`
   - **Important**: Use `user_identifier` (NOT `user_id`) for user tracking
   - Currently supports: `ittemiitai` (行ってみたい)
-- `monthly_digests` - AI-generated monthly summaries
+- `monthly_digests` - AI-generated monthly summaries (Phase 2)
 
 ### API Routes Structure
 - `/api/parse-gmaps` - Parse Google Maps links (supports shortened URLs), extract Place ID, fetch place details
   - Supports `maps.app.goo.gl` shortened URLs
   - Falls back to Find Place from Text API if Place ID not found
-- `/api/recommendations` - POST: Create new recommendation with validation
+- `/api/recommendations` - POST: Create new recommendation with validation (includes review_category)
 - `/api/upload/image` - POST: Upload and convert images to WebP (max 1200px, quality 80%)
 - `/api/upload/image/[path]` - DELETE: Remove images from storage
 - `/api/reactions` - POST/DELETE: Manage reactions with optimistic updates
@@ -144,8 +148,11 @@ This project uses Supabase for backend operations:
 ### Key Features
 - **No authentication required** for posting (cookie-based edit window: 24h)
 - **Source attribution**: Who told you about this place (家族, 友人, 近所の人, etc.)
+- **Review categories**: Manual selection from グルメ, 景色, 体験, 癒し, その他
+  - AI auto-categorization planned for Phase 2 (Ticket 010)
+  - Category badges displayed on review cards with color coding
 - **Category-based pin colors**: 飲食=Orange, 体験=Blue, 自然=Green, 温泉=Brown
-- **AI features**: Tone softening, auto-tag generation, monthly digest reports
+- **AI features** (Phase 2): Tone softening, auto-tag generation, category auto-classification, monthly digest reports
 - **Mobile-first**: Optimized for 60+ age users with accessibility focus
 
 ### Security Notes
@@ -173,12 +180,13 @@ This project uses Supabase for backend operations:
 - `PostModal/PostModal.tsx` - 2-step post creation (URL input → form)
 - `PostModal/ImageUpload.tsx` - Drag & drop image upload with compression and preview
 - `PostModal/SourceSelector.tsx` - Information source selection (6 presets + other)
+- `PostModal/CategorySelector.tsx` - Review category selection (5 categories with emoji icons)
 - `Reaction/ReactionButtons.tsx` - Reaction buttons with optimistic updates and Realtime sync
 
 ### Utilities
 - `lib/google-maps.ts` - Map initialization, link parsing (supports shortened URLs), default settings
   - **Critical**: `loadGoogleMapsScript()` uses Promise caching and DOM checking to prevent multiple script loads
-- `lib/formatters.ts` - Time formatting, icons (heard_from, category), tag colors
+- `lib/formatters.ts` - Time formatting, icons (heard_from, category), tag colors, review category emoji/colors
 - `lib/image-compression.ts` - Client-side image validation and compression
 - `lib/supabase/client.ts` - Browser-side Supabase client
 - `lib/supabase/server.ts` - Server-side Supabase client (with Next.js 15 async cookies)
@@ -323,17 +331,21 @@ Development is organized into feature tickets in `/docs`:
 - **Continuous**: Tickets 013-015 - Security, accessibility, legal compliance
 
 ### Current Implementation Status
-**Phase 1 - MVP (Completed: Tickets 001-007)**
+**Phase 1 - MVP (Progress: 7/9 completed - 78%)**
 - ✅ **Ticket 001**: Project setup with Next.js 15, Supabase, Google Maps
 - ✅ **Ticket 002**: Database schema with 4 tables + RLS policies
 - ✅ **Ticket 003**: Google Maps display with clustering, current location, category pins
 - ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, image optimization
-- ✅ **Ticket 005**: Post modal with Google Maps URL parser, source selector, image upload
+- ✅ **Ticket 005**: Post modal with Google Maps URL parser, source selector, category selector, image upload
 - ✅ **Ticket 006**: Image optimization with WebP conversion, blur placeholders, deletion API
-- ✅ **Ticket 007**: Reaction feature (👍 行ってみたい button) with optimistic updates
+- ✅ **Ticket 007**: Reaction feature (👍 行ってみたい button) with optimistic updates and Realtime sync
+  - **Latest**: Review category feature (manual selection) integrated into Ticket 005
+  - Database migration: `review_category` column added with CHECK constraint
+  - UI: CategorySelector component with 5 categories (グルメ, 景色, 体験, 癒し, その他)
+  - Display: Category badges on ReviewCard with color coding
 
 **Next Steps (Week 3: 仕上げ)**
-- 🟡 **Ticket 008**: Search & filter (category, area, tags)
+- 🟡 **Ticket 008**: Search & filter (category, area, tags, keyword search)
 - 🟡 **Ticket 009**: Admin panel (post management, statistics)
 
 ## Next.js App Router Best Practices
