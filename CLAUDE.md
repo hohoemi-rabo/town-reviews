@@ -344,7 +344,15 @@ Development is organized into feature tickets in `/docs`:
   - UI: CategorySelector component with 5 categories (グルメ, 景色, 体験, 癒し, その他)
   - Display: Category badges on ReviewCard with color coding
 
-**Next Steps (Week 3: 仕上げ)**
+**Phase 1.5 - UX Improvement (Specification Change)**
+- 🔴 **Ticket 016**: Facility database pre-registration & search function (HIGHEST PRIORITY)
+  - **Background**: Google Maps URL input is too difficult for elderly users
+  - **Solution**: Pre-register 500-1000 facilities, keyword search with suggestions
+  - **Changes**: Complete removal of Google Maps URL input flow
+  - **New flow**: Facility search → Select → Review form
+  - **Facility request**: Simple form with email notification to admin (rabo.hohoemi@gmail.com)
+
+**Phase 1 Remaining Tasks**
 - 🟡 **Ticket 008**: Search & filter (category, area, tags, keyword search)
 - 🟡 **Ticket 009**: Admin panel (post management, statistics)
 
