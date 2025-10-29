@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      facility_requests: {
+        Row: {
+          address: string | null
+          admin_note: string | null
+          area: string | null
+          category: string | null
+          created_at: string | null
+          facility_name: string
+          id: string
+          processed_at: string | null
+          requester_email: string | null
+          requester_name: string | null
+          status: string | null
+        }
+        Insert: {
+          address?: string | null
+          admin_note?: string | null
+          area?: string | null
+          category?: string | null
+          created_at?: string | null
+          facility_name: string
+          id?: string
+          processed_at?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          status?: string | null
+        }
+        Update: {
+          address?: string | null
+          admin_note?: string | null
+          area?: string | null
+          category?: string | null
+          created_at?: string | null
+          facility_name?: string
+          id?: string
+          processed_at?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       monthly_digests: {
         Row: {
           created_at: string | null
@@ -44,32 +86,47 @@ export type Database = {
       places: {
         Row: {
           address: string | null
+          area: string | null
           category: string | null
           created_at: string | null
+          created_by: string | null
+          google_maps_url: string | null
           id: string
+          is_verified: boolean | null
           lat: number
           lng: number
           name: string
+          phone: string | null
           place_id: string
         }
         Insert: {
           address?: string | null
+          area?: string | null
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
+          google_maps_url?: string | null
           id?: string
+          is_verified?: boolean | null
           lat: number
           lng: number
           name: string
+          phone?: string | null
           place_id: string
         }
         Update: {
           address?: string | null
+          area?: string | null
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
+          google_maps_url?: string | null
           id?: string
+          is_verified?: boolean | null
           lat?: number
           lng?: number
           name?: string
+          phone?: string | null
           place_id?: string
         }
         Relationships: []

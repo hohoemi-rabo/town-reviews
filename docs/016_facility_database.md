@@ -345,22 +345,22 @@ const googleMapsUrl = place_id
 
 ## 実装タスク
 
-### Phase 1: データベース & API
-- [ ] データベース設計
-  - [ ] placesテーブル拡張マイグレーション
-  - [ ] facility_requestsテーブル作成
-  - [ ] インデックス追加
-  - [ ] database.types.ts再生成
-- [ ] 施設検索API実装（`/api/facilities/search`）
-  - [ ] PostgreSQL全文検索
-  - [ ] ILIKE部分一致フォールバック
-  - [ ] エリア・カテゴリー絞り込み
-  - [ ] レスポンス整形
-- [ ] 施設追加リクエストAPI実装（`/api/facility-requests`）
-  - [ ] POST: リクエスト保存
-  - [ ] Resendメール送信
-  - [ ] バリデーション
-  - [ ] エラーハンドリング
+### Phase 1: データベース & API ✅ 完了
+- [×] データベース設計
+  - [×] placesテーブル拡張マイグレーション
+  - [×] facility_requestsテーブル作成
+  - [×] インデックス追加
+  - [×] database.types.ts再生成
+- [×] 施設検索API実装（`/api/facilities/search`）
+  - [×] PostgreSQL全文検索（pg_trgm有効化）
+  - [×] ILIKE部分一致フォールバック
+  - [×] エリア・カテゴリー絞り込み
+  - [×] レスポンス整形
+- [×] 施設追加リクエストAPI実装（`/api/facility-requests`）
+  - [×] POST: リクエスト保存
+  - [×] Resendメール送信
+  - [×] バリデーション
+  - [×] エラーハンドリング
 
 ### Phase 2: UI改修
 - [ ] PostModal大幅改修
@@ -378,20 +378,20 @@ const googleMapsUrl = place_id
   - [ ] バリデーション
   - [ ] 送信確認メッセージ
 
-### Phase 3: データ取得 & インポート
-- [ ] Google Places API一括取得スクリプト
-  - [ ] 複数エリア × カテゴリーの組み合わせ取得
-  - [ ] Place Details取得
-  - [ ] CSV出力
-  - [ ] 進捗表示
-  - [ ] エラーハンドリング
-  - [ ] npm scriptに追加（`npm run import-places`）
-- [ ] 管理画面: CSVインポート機能
-  - [ ] CSVアップロードフォーム
-  - [ ] ファイル検証
-  - [ ] 重複チェック
-  - [ ] 一括INSERT
-  - [ ] 結果レポート表示
+### Phase 3: データ取得 & インポート ✅ 完了
+- [×] Google Places API一括取得スクリプト
+  - [×] 複数エリア × カテゴリーの組み合わせ取得
+  - [×] Place Details取得
+  - [×] CSV出力
+  - [×] 進捗表示
+  - [×] エラーハンドリング
+  - [×] npm scriptに追加（`npm run fetch-facilities`）
+- [×] 管理画面: CSVインポートAPI実装
+  - [×] CSVアップロードAPI（`/api/admin/import-facilities`）
+  - [×] ファイル検証
+  - [×] 重複チェック（upsert）
+  - [×] 一括INSERT
+  - [ ] 管理画面UI（Phase 4で実装予定）
 
 ### Phase 4: 管理画面拡張
 - [ ] 施設追加リクエスト管理画面
