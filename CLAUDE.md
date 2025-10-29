@@ -352,6 +352,14 @@ Development is organized into feature tickets in `/docs`:
 - Each ticket follows format: `{number}_{feature_name}.md`
 - Tickets include: overview, priority, time estimate, phase, specs, tasks, files, completion criteria
 
+### Ticket Overlap Resolution
+**Important**: Tickets 008, 009, and 016 had overlapping functionality that has been resolved:
+- **Ticket 016**: Facility search for post creation (completed Phase 1-3)
+- **Ticket 008**: Review filtering (reuses Ticket 016's facility search component)
+- **Ticket 009**: Admin panel (integrates Ticket 016 Phase 4 as its Phase 3)
+
+When implementing these tickets, always check the "備考" (Remarks) section for integration notes.
+
 ### Todo Format
 ```markdown
 - [ ] Incomplete task
@@ -399,7 +407,15 @@ Development is organized into feature tickets in `/docs`:
 
 **Phase 1 Remaining Tasks**
 - 🟡 **Ticket 008**: Search & filter (category, area, tags, keyword search) - **NEXT**
-- 🟡 **Ticket 009**: Admin panel (post management, statistics) - Can be combined with Ticket 016 Phase 4
+  - **Updated**: Reuses FacilitySearchInput from Ticket 016 for facility filtering
+  - Keyword search focuses on recommendation content (`note_formatted`) only
+  - Facility search is handled by existing `/api/facilities/search` API
+- 🟡 **Ticket 009**: Admin panel (post management, statistics)
+  - **Updated**: Integrates Ticket 016 Phase 4 (facility management) as Phase 3
+  - Phase 1: Authentication & Foundation
+  - Phase 2: Post Management
+  - Phase 3: Facility Management (facility requests, facility data, CSV import/export)
+  - Phase 4: Statistics & Audit Logs
 
 ## Next.js App Router Best Practices
 

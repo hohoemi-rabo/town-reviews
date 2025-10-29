@@ -51,13 +51,18 @@ Google Maps URL入力方式は高齢者には難しいため、施設を事前�
 - ✅ Phase 1: データベース & API（施設検索API、施設追加リクエストAPI、RLSポリシー）
 - ✅ Phase 2: UI改修（FacilitySearchInput、FacilityRequestModal、PostModal改修、**ひらがな/カタカナ検索サポート追加**）
 - ✅ Phase 3: データ取得 & インポート（Google Places API、130件登録完了、CSV import/export）
-- ⏳ Phase 4: 管理画面拡張（未実装）
+- ⏳ Phase 4: 管理画面拡張 → **Ticket 009と統合して実装予定**
 
 ---
 
 ### Phase 1 残タスク
-- [008_search_filter.md](./008_search_filter.md) - 検索・フィルタ機能 🟡
+- [008_search_filter.md](./008_search_filter.md) - 検索・フィルタ機能 🟡 **NEXT**
+  - **更新**: Ticket 016の施設検索機能を再利用するよう調整済み
+  - 施設フィルタはFacilitySearchInputコンポーネントを活用
+  - キーワード検索は口コミ内容に特化
 - [009_admin_panel.md](./009_admin_panel.md) - 管理画面 🟡
+  - **更新**: Ticket 016 Phase 4（施設管理機能）を統合
+  - Phase 3に施設追加リクエスト管理、施設データ管理、CSVインポート/エクスポートを追加
 
 ## Phase 2: β版リリース（MVP後1ヶ月）
 
