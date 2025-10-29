@@ -38,7 +38,7 @@
 - [006_image_upload.md](./006_image_upload.md) - 画像アップロード機能 ✅ **完了** *(005で基本実装、006で最適化)*
 
 ### Week 3: 仕上げ
-- [007_reaction_feature.md](./007_reaction_feature.md) - リアクション機能 🟡
+- [007_reaction_feature.md](./007_reaction_feature.md) - リアクション機能 ✅ **完了**
 - [008_search_filter.md](./008_search_filter.md) - 検索・フィルタ機能 🟡
 - [009_admin_panel.md](./009_admin_panel.md) - 管理画面 🟡
 

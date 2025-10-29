@@ -41,7 +41,7 @@ export interface MonthlyDigest {
   id: string
   year_month: string
   summary: string | null
-  popular_spots: Record<string, any> | null
+  popular_spots: Record<string, unknown> | null
   trending_tags: string[] | null
   created_at: string
 }

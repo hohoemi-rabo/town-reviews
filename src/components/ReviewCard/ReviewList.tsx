@@ -1,22 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ReviewCard from './ReviewCard'
 import SkeletonCard from './SkeletonCard'
 import type { Tables } from '@/types/database.types'
 
+export type ExtendedRecommendation = Tables<'recommendations'> & {
+  places: Tables<'places'> | null
+}
+
 interface ReviewListProps {
   initialReviews?: ExtendedRecommendation[]
   onLoadMore?: (page: number) => Promise<ExtendedRecommendation[]>
-}
-
-type ExtendedRecommendation = Tables<'recommendations'> & {
-  places: Tables<'places'> | null
-  reactions: {
-    hokkorisu: number
-    ittemiitai: number
-    memoshita: number
-  }
 }
 
 export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewListProps) {
@@ -26,28 +21,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
   const [hasMore, setHasMore] = useState(true)
   const observerTarget = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          loadMore()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current)
-    }
-
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current)
-      }
-    }
-  }, [hasMore, loading])
-
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (!onLoadMore) return
 
     setLoading(true)
@@ -66,7 +40,29 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
     } finally {
       setLoading(false)
     }
-  }
+  }, [onLoadMore, page])
+
+  useEffect(() => {
+    const currentTarget = observerTarget.current
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (currentTarget) {
+      observer.observe(currentTarget)
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget)
+      }
+    }
+  }, [hasMore, loading, loadMore])
 
   if (reviews.length === 0 && !loading) {
     return (
@@ -96,7 +92,6 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
             authorName={review.author_name}
             isAnonymous={review.is_anonymous ?? true}
             createdAt={review.created_at || new Date().toISOString()}
-            reactions={review.reactions}
           />
         ))}
 

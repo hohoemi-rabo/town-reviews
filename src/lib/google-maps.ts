@@ -18,22 +18,58 @@ export const CATEGORY_COLORS = {
   温泉: '#8B4513', // Brown
 } as const
 
+// Keep track of the loading promise to prevent multiple script loads
+let loadingPromise: Promise<void> | null = null
+
 // Load Google Maps script dynamically
 export function loadGoogleMapsScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (typeof window.google !== 'undefined') {
-      resolve()
+  // If already loaded, resolve immediately
+  if (typeof window !== 'undefined' && typeof window.google !== 'undefined') {
+    return Promise.resolve()
+  }
+
+  // If already loading, return the existing promise
+  if (loadingPromise) {
+    return loadingPromise
+  }
+
+  // Start loading
+  loadingPromise = new Promise((resolve, reject) => {
+    // Check if script is already in DOM
+    const existingScript = document.querySelector(
+      `script[src*="maps.googleapis.com/maps/api/js"]`
+    )
+
+    if (existingScript) {
+      // Script is already in DOM, wait for it to load
+      if (typeof window.google !== 'undefined') {
+        resolve()
+      } else {
+        existingScript.addEventListener('load', () => resolve())
+        existingScript.addEventListener('error', () =>
+          reject(new Error('Failed to load Google Maps script'))
+        )
+      }
       return
     }
 
+    // Create new script
     const script = document.createElement('script')
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`
     script.async = true
     script.defer = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load Google Maps script'))
+    script.onload = () => {
+      loadingPromise = null
+      resolve()
+    }
+    script.onerror = () => {
+      loadingPromise = null
+      reject(new Error('Failed to load Google Maps script'))
+    }
     document.head.appendChild(script)
   })
+
+  return loadingPromise
 }
 
 // Parse Google Maps link to extract Place ID

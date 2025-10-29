@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   formatRelativeTime,
   getHeardFromIcon,
@@ -9,6 +8,7 @@ import {
 } from '@/lib/formatters'
 import ReviewImage from './ReviewImage'
 import ReviewTags from './ReviewTags'
+import ReactionButtons from '../Reaction/ReactionButtons'
 
 interface ReviewCardProps {
   id: string
@@ -22,15 +22,10 @@ interface ReviewCardProps {
   authorName: string | null
   isAnonymous: boolean
   createdAt: string
-  reactions: {
-    hokkorisu: number
-    ittemiitai: number
-    memoshita: number
-  }
-  onReactionClick?: (reactionType: string) => void
 }
 
 export default function ReviewCard({
+  id,
   spotName,
   heardFrom,
   heardFromType,
@@ -41,21 +36,7 @@ export default function ReviewCard({
   authorName,
   isAnonymous,
   createdAt,
-  reactions,
-  onReactionClick,
 }: ReviewCardProps) {
-  const [selectedReactions, setSelectedReactions] = useState<Set<string>>(new Set())
-
-  const handleReaction = (reactionType: string) => {
-    const newSelected = new Set(selectedReactions)
-    if (newSelected.has(reactionType)) {
-      newSelected.delete(reactionType)
-    } else {
-      newSelected.add(reactionType)
-    }
-    setSelectedReactions(newSelected)
-    onReactionClick?.(reactionType)
-  }
 
   return (
     <article
@@ -104,7 +85,7 @@ export default function ReviewCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-washi-beige-dark">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t border-washi-beige-dark">
         <div className="flex items-center gap-3 text-sm text-gray-500">
           <time dateTime={createdAt}>{formatRelativeTime(createdAt)}</time>
           {!isAnonymous && authorName && (
@@ -116,41 +97,7 @@ export default function ReviewCard({
         </div>
 
         {/* Reactions */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleReaction('hokkorisu')}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
-              selectedReactions.has('hokkorisu')
-                ? 'bg-washi-orange text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-            aria-label="ほっこりリアクション"
-          >
-            😊 {reactions.hokkorisu}
-          </button>
-          <button
-            onClick={() => handleReaction('ittemiitai')}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
-              selectedReactions.has('ittemiitai')
-                ? 'bg-washi-orange text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-            aria-label="行ってみたいリアクション"
-          >
-            🚶 {reactions.ittemiitai}
-          </button>
-          <button
-            onClick={() => handleReaction('memoshita')}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
-              selectedReactions.has('memoshita')
-                ? 'bg-washi-orange text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-            aria-label="メモしたリアクション"
-          >
-            📝 {reactions.memoshita}
-          </button>
-        </div>
+        <ReactionButtons recommendationId={id} />
       </div>
     </article>
   )

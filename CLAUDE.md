@@ -98,7 +98,9 @@ This project uses Supabase for backend operations:
 ### Database Schema (Key Tables)
 - `places` - Location information (Google Place ID, coordinates, category)
 - `recommendations` - User reviews with source attribution
-- `reactions` - Emoji reactions (ほっこり, 行ってみたい, メモした)
+- `reactions` - User reactions with columns: `id`, `recommendation_id`, `reaction_type`, `user_identifier`, `created_at`
+  - **Important**: Use `user_identifier` (NOT `user_id`) for user tracking
+  - Currently supports: `ittemiitai` (行ってみたい)
 - `monthly_digests` - AI-generated monthly summaries
 
 ### API Routes Structure
@@ -108,7 +110,9 @@ This project uses Supabase for backend operations:
 - `/api/recommendations` - POST: Create new recommendation with validation
 - `/api/upload/image` - POST: Upload and convert images to WebP (max 1200px, quality 80%)
 - `/api/upload/image/[path]` - DELETE: Remove images from storage
-- `/api/reactions` - Manage reactions (planned)
+- `/api/reactions` - POST/DELETE: Manage reactions with optimistic updates
+  - POST: Add reaction (duplicate check via `user_identifier`)
+  - DELETE: Remove reaction
 - `/api/ai/*` - AI features: tone conversion, tag generation (Phase 2)
 
 ## Project-Specific Conventions
@@ -126,7 +130,13 @@ This project uses Supabase for backend operations:
    - Images uploaded via `/api/upload/image` (compressed + WebP conversion)
    - Data saved to Supabase with cookie for 24h edit window
 2. **Map Display**: Supabase → Filter/Cluster → Google Maps markers (color by category)
-3. **Reactions**: LocalStorage (user ID) + Supabase Realtime for live updates (planned)
+3. **Reactions**:
+   - User clicks reaction button
+   - **Optimistic Update**: UI updates immediately (count +1 or -1)
+   - API call sent to `/api/reactions` (POST or DELETE)
+   - On error: UI reverts to previous state
+   - Supabase Realtime keeps all clients in sync
+   - LocalStorage tracks user's reactions for duplicate prevention
 4. **Image Processing**:
    - Client: browser-image-compression (max 1MB, 1920px)
    - Server: sharp (resize to 1200px, convert to WebP at 80% quality)
@@ -158,25 +168,132 @@ This project uses Supabase for backend operations:
 
 ### Components
 - `Map/Map.tsx` - Google Maps with clustering, current location marker, category-colored pins
+  - **Important**: Uses singleton pattern for script loading to prevent duplicate API loads
 - `ReviewCard/*` - Card UI with optimized images, tags, reactions, source attribution, infinite scroll
 - `PostModal/PostModal.tsx` - 2-step post creation (URL input → form)
 - `PostModal/ImageUpload.tsx` - Drag & drop image upload with compression and preview
 - `PostModal/SourceSelector.tsx` - Information source selection (6 presets + other)
+- `Reaction/ReactionButtons.tsx` - Reaction buttons with optimistic updates and Realtime sync
 
 ### Utilities
 - `lib/google-maps.ts` - Map initialization, link parsing (supports shortened URLs), default settings
+  - **Critical**: `loadGoogleMapsScript()` uses Promise caching and DOM checking to prevent multiple script loads
 - `lib/formatters.ts` - Time formatting, icons (heard_from, category), tag colors
 - `lib/image-compression.ts` - Client-side image validation and compression
 - `lib/supabase/client.ts` - Browser-side Supabase client
 - `lib/supabase/server.ts` - Server-side Supabase client (with Next.js 15 async cookies)
+- `lib/local-storage.ts` - LocalStorage management for user reactions (UUID-based tracking)
 - `styles/map-styles.ts` - Custom washi-themed Google Maps styles
 
+### Hooks
+- `hooks/useUserId.ts` - Generate and persist anonymous user UUID in LocalStorage
+- `hooks/useReactions.ts` - Fetch reaction counts and subscribe to Realtime updates
+  - Exports `incrementCount` and `decrementCount` for optimistic updates
+
 ### Important Patterns
-- Main page (`app/page.tsx`) has map/list toggle view (currently with sample data)
+- Main page (`app/page.tsx`) has map/list toggle view with real-time database fetching
 - All marker icons use `google.maps.SymbolPath.CIRCLE` with category-specific colors
 - Review cards use Next.js Image with blur placeholder and loading animation
 - Image upload: Client compression → Server WebP conversion → Supabase Storage
 - Cookie-based edit tracking: 24h window stored in `editable_posts` cookie
+- **Optimistic Updates**: UI updates immediately before API response, with rollback on error
+- **Supabase Realtime**: Subscribe to INSERT/DELETE events for live updates across clients
+
+## Critical Architectural Patterns
+
+### Optimistic Updates Pattern
+Used in reaction buttons to provide instant feedback:
+
+```typescript
+// In useReactions hook
+const incrementCount = (reactionType) => {
+  setCounts((prev) => ({ ...prev, [reactionType]: prev[reactionType] + 1 }))
+}
+
+// In ReactionButtons component
+const handleReactionClick = async (reactionType) => {
+  // 1. Update UI immediately (optimistic)
+  incrementCount(reactionType)
+  addUserReaction(recommendationId, reactionType)
+
+  // 2. Send API request
+  const response = await fetch('/api/reactions', { method: 'POST', ... })
+
+  // 3. Rollback on error
+  if (!response.ok) {
+    decrementCount(reactionType)
+    removeUserReaction(recommendationId, reactionType)
+  }
+}
+```
+
+### Google Maps Script Loading (Singleton Pattern)
+Prevents "multiple API loads" error:
+
+```typescript
+let loadingPromise: Promise<void> | null = null
+
+export function loadGoogleMapsScript(): Promise<void> {
+  // Return if already loaded
+  if (typeof window.google !== 'undefined') return Promise.resolve()
+
+  // Return existing promise if loading
+  if (loadingPromise) return loadingPromise
+
+  // Check for existing script in DOM
+  const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`)
+  if (existingScript) { /* handle existing script */ }
+
+  // Create new script
+  loadingPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.onload = () => { loadingPromise = null; resolve() }
+    document.head.appendChild(script)
+  })
+
+  return loadingPromise
+}
+```
+
+### Common Pitfalls and Solutions
+
+1. **Database Column Names**
+   - ❌ Wrong: Using `user_id` in reactions table
+   - ✅ Correct: Use `user_identifier` (actual column name)
+   - Always check `src/types/database.types.ts` for accurate schema
+
+2. **Supabase JOIN Results**
+   - ❌ Wrong: Assuming joined data is a single object
+   - ✅ Correct: Supabase returns joined data as arrays, transform to single object:
+   ```typescript
+   const transformedData = data.map((item) => ({
+     ...item,
+     places: Array.isArray(item.places) ? item.places[0] : null
+   }))
+   ```
+
+3. **React Hooks Dependencies**
+   - ❌ Wrong: Using `observerTarget.current` directly in cleanup
+   - ✅ Correct: Store ref in variable before use:
+   ```typescript
+   useEffect(() => {
+     const currentTarget = observerTarget.current
+     // ... use currentTarget in observer and cleanup
+     return () => { observer.unobserve(currentTarget) }
+   }, [dependencies])
+   ```
+
+4. **Type Safety with Supabase Queries**
+   - Export shared types from components for reuse:
+   ```typescript
+   // In ReviewList.tsx
+   export type ExtendedRecommendation = Tables<'recommendations'> & {
+     places: Tables<'places'> | null
+   }
+
+   // In page.tsx
+   import { type ExtendedRecommendation } from '@/components/ReviewCard/ReviewList'
+   ```
 
 ## Development Workflow
 
@@ -206,16 +323,16 @@ Development is organized into feature tickets in `/docs`:
 - **Continuous**: Tickets 013-015 - Security, accessibility, legal compliance
 
 ### Current Implementation Status
-**Phase 1 - MVP (Completed: Tickets 001-006)**
+**Phase 1 - MVP (Completed: Tickets 001-007)**
 - ✅ **Ticket 001**: Project setup with Next.js 15, Supabase, Google Maps
 - ✅ **Ticket 002**: Database schema with 4 tables + RLS policies
 - ✅ **Ticket 003**: Google Maps display with clustering, current location, category pins
 - ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, image optimization
 - ✅ **Ticket 005**: Post modal with Google Maps URL parser, source selector, image upload
 - ✅ **Ticket 006**: Image optimization with WebP conversion, blur placeholders, deletion API
+- ✅ **Ticket 007**: Reaction feature (👍 行ってみたい button) with optimistic updates
 
 **Next Steps (Week 3: 仕上げ)**
-- 🟡 **Ticket 007**: Reaction feature (ほっこり, 行ってみたい, メモした buttons)
 - 🟡 **Ticket 008**: Search & filter (category, area, tags)
 - 🟡 **Ticket 009**: Admin panel (post management, statistics)
 
