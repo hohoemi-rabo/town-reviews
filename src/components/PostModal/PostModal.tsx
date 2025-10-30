@@ -43,6 +43,7 @@ export default function PostModal({
   const [images, setImages] = useState<File[]>([])
   const [authorName, setAuthorName] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(true)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -88,6 +89,11 @@ export default function PostModal({
 
     if (!isAnonymous && !authorName.trim()) {
       setError('投稿者名を入力してください')
+      return
+    }
+
+    if (!agreedToTerms) {
+      setError('利用規約に同意してください')
       return
     }
 
@@ -305,6 +311,38 @@ export default function PostModal({
                       maxLength={20}
                     />
                   )}
+                </div>
+
+                {/* Terms agreement */}
+                <div className="space-y-2">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="w-4 h-4 mt-1 rounded border-gray-300 text-washi-green focus:ring-washi-green"
+                    />
+                    <span className="text-sm text-gray-700">
+                      <a
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-washi-green hover:underline font-medium"
+                      >
+                        利用規約
+                      </a>
+                      と
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-washi-green hover:underline font-medium"
+                      >
+                        プライバシーポリシー
+                      </a>
+                      に同意する <span className="text-red-500">*</span>
+                    </span>
+                  </label>
                 </div>
 
                 {/* Submit button */}
