@@ -3,6 +3,99 @@ import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
+/**
+ * 口コミ一覧取得API（フィルタ機能付き）
+ * GET /api/recommendations?facility_id=xxx&tags=tag1,tag2&season=春&heard_from_types=家族・親戚,友人・知人&categories=グルメ,景色&search=keyword
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const facilityId = searchParams.get('facility_id')
+    const tagsParam = searchParams.get('tags')
+    const season = searchParams.get('season')
+    const heardFromTypesParam = searchParams.get('heard_from_types')
+    const categoriesParam = searchParams.get('categories')
+    const search = searchParams.get('search')
+
+    const supabase = await createClient()
+
+    // Build query
+    let query = supabase
+      .from('recommendations')
+      .select(`
+        *,
+        places:place_id (
+          id,
+          place_id,
+          name,
+          lat,
+          lng,
+          category,
+          address,
+          created_at
+        )
+      `)
+
+    // Filter by facility
+    if (facilityId) {
+      query = query.eq('place_id', facilityId)
+    }
+
+    // Filter by season
+    if (season) {
+      query = query.eq('season', season)
+    }
+
+    // Filter by heard_from_types (OR condition)
+    if (heardFromTypesParam) {
+      const heardFromTypes = heardFromTypesParam.split(',')
+      query = query.in('heard_from_type', heardFromTypes)
+    }
+
+    // Filter by categories (OR condition)
+    if (categoriesParam) {
+      const categories = categoriesParam.split(',')
+      query = query.in('review_category', categories)
+    }
+
+    // Filter by tags (OR condition)
+    if (tagsParam) {
+      const tags = tagsParam.split(',')
+      // Use overlaps operator for array fields
+      query = query.overlaps('tags', tags)
+    }
+
+    // Filter by keyword search (full-text search on note_formatted)
+    if (search && search.trim()) {
+      query = query.ilike('note_formatted', `%${search.trim()}%`)
+    }
+
+    // Order by created_at descending
+    query = query.order('created_at', { ascending: false })
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Failed to fetch recommendations:', error)
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch recommendations' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      recommendations: data,
+    })
+  } catch (error) {
+    console.error('Recommendations GET API error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 interface PostRequestBody {
   place: {
     placeId: string
@@ -99,7 +192,7 @@ export async function POST(request: NextRequest) {
     const ipHash = crypto.createHash('sha256').update(ipAddress).digest('hex')
 
     // 1. Insert or get place
-    const { data: existingPlace, error: placeSelectError } = await supabase
+    const { data: existingPlace } = await supabase
       .from('places')
       .select('id')
       .eq('place_id', place.placeId)

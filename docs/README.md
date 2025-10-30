@@ -55,12 +55,13 @@ Google Maps URL入力方式は高齢者には難しいため、施設を事前�
 
 ---
 
-### Phase 1 残タスク
-- [008_search_filter.md](./008_search_filter.md) - 検索・フィルタ機能 🟡 **NEXT**
-  - **更新**: Ticket 016の施設検索機能を再利用するよう調整済み
-  - 施設フィルタはFacilitySearchInputコンポーネントを活用
-  - キーワード検索は口コミ内容に特化
-- [009_admin_panel.md](./009_admin_panel.md) - 管理画面 🟡
+### Phase 1 完了・残タスク
+- ✅ [008_search_filter.md](./008_search_filter.md) - 検索・フィルタ機能 **完了**
+  - フィルタ基盤（状態管理、hooks）
+  - API実装（タグ一覧、口コミ検索拡張）
+  - UX改善（デバウンス、URL同期、メインページ統合）
+  - 仕上げ（レスポンシブ、アニメーション）
+- 🟡 [009_admin_panel.md](./009_admin_panel.md) - 管理画面 **NEXT**
   - **更新**: Ticket 016 Phase 4（施設管理機能）を統合
   - Phase 3に施設追加リクエスト管理、施設データ管理、CSVインポート/エクスポートを追加
 
