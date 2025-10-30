@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { validateSession } from '../../auth/route'
+import { createAuditLog } from '@/lib/audit-log'
 
 type RouteContext = {
   params: Promise<{
@@ -135,6 +136,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         )
       }
 
+      // 監査ログを記録
+      await createAuditLog({
+        action: 'approve',
+        targetType: 'facility_request',
+        targetId: id,
+        details: {
+          facility_name: placeData.name.trim(),
+          created_place_id: newPlace.id,
+        },
+        adminIdentifier: 'admin',
+      })
+
       return NextResponse.json({
         success: true,
         message: '施設を承認し、登録しました',
@@ -157,6 +170,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           { status: 500 }
         )
       }
+
+      // 監査ログを記録
+      await createAuditLog({
+        action: 'reject',
+        targetType: 'facility_request',
+        targetId: id,
+        details: {
+          facility_name: facilityRequest.facility_name,
+          admin_note: admin_note || null,
+        },
+        adminIdentifier: 'admin',
+      })
 
       return NextResponse.json({
         success: true,

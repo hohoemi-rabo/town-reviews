@@ -120,6 +120,11 @@ This project uses Supabase for backend operations:
 - `facility_requests` - User-submitted facility addition requests (pending admin approval)
   - Key fields: `facility_name`, `address`, `area`, `category`, `requester_name`, `requester_email`, `status`, `admin_note`
   - **status**: 'pending', 'approved', 'rejected'
+- `audit_logs` - Admin action tracking for security and accountability
+  - Key fields: `action`, `target_type`, `target_id`, `details`, `admin_identifier`, `created_at`
+  - **action**: 'create', 'update', 'delete', 'approve', 'reject'
+  - **target_type**: 'recommendation', 'facility', 'facility_request'
+  - Indexed by created_at, target_type, action for efficient querying
 - `monthly_digests` - AI-generated monthly summaries (Phase 2)
 
 ### API Routes Structure
@@ -152,6 +157,8 @@ This project uses Supabase for backend operations:
 - `/api/admin/facilities/[id]` - GET/PATCH/DELETE: Individual facility operations (admin only)
 - `/api/admin/facility-requests` - GET: List facility addition requests with status filter
 - `/api/admin/facility-requests/[id]` - PATCH: Approve/reject facility requests (creates place on approval)
+- `/api/admin/stats` - GET: Fetch statistics data (posts, facilities, popular spots, tags, reactions)
+- `/api/admin/audit-logs` - GET: Fetch audit logs with pagination
 - `/api/admin/import-facilities` - **POST**: Bulk import facilities from CSV (admin only)
 - `/api/ai/*` - AI features: tone conversion, tag generation (Phase 2)
 
@@ -269,6 +276,10 @@ This project uses Supabase for backend operations:
 - `lib/supabase/server.ts` - Server-side Supabase client (with Next.js 15 async cookies)
 - `lib/supabase/admin.ts` - **New**: Admin-only Supabase client using service role key (bypasses RLS)
   - ⚠️ **Critical**: Only use in server-side admin API routes, never expose to client
+- `lib/audit-log.ts` - **New**: Audit log utility for tracking admin actions
+  - `createAuditLog()`: Records admin operations to audit_logs table
+  - Supports actions: create, update, delete, approve, reject
+  - Target types: recommendation, facility, facility_request
 - `lib/local-storage.ts` - LocalStorage management for user reactions (UUID-based tracking)
 - `styles/map-styles.ts` - Custom washi-themed Google Maps styles
 
@@ -455,6 +466,8 @@ When implementing these tickets, always check the "備考" (Remarks) section for
 
 ### Current Implementation Status
 **Phase 1 - MVP (Progress: 9/9 completed - 100%)** ✅ **COMPLETED**
+
+**Note**: All Phase 1 tickets have been successfully completed. The MVP is ready for deployment.
 - ✅ **Ticket 001**: Project setup with Next.js 15, Supabase, Google Maps
 - ✅ **Ticket 002**: Database schema with 4 tables + RLS policies
 - ✅ **Ticket 003**: Google Maps display with clustering, current location, category pins
@@ -474,7 +487,7 @@ When implementing these tickets, always check the "備考" (Remarks) section for
   - Debounced keyword search (500ms) for recommendation content
   - Filter components: CategoryFilter, TagFilter, SeasonFilter, SourceFilter, FacilityFilter, ContentSearchInput
   - Real-time filter count display and clear filters functionality
-- ✅ **Ticket 009**: Admin panel (Phase 1-3 completed)
+- ✅ **Ticket 009**: Admin panel (Phase 1-4 completed) ✅ **COMPLETED**
   - **Phase 1**: Authentication & Foundation ✅
     - Password-based authentication with session cookies
     - Middleware protection for all `/admin/*` routes
@@ -499,7 +512,14 @@ When implementing these tickets, always check the "備考" (Remarks) section for
       - RLS policies for `facility_requests` (INSERT + SELECT required)
       - `place_id` NULL constraint removal (allows manual facility addition)
       - Empty string → NULL for unique constraint fields
-  - **Phase 4**: Statistics & Audit Logs (pending)
+  - **Phase 4**: Statistics & Audit Logs ✅
+    - Statistics dashboard with real-time data
+    - Recharts integration (pie charts, bar charts)
+    - Review category breakdown, facility distribution by area/category
+    - Popular spots TOP10, popular tags TOP10
+    - Audit logs table with action tracking (create/update/delete/approve/reject)
+    - Audit log utility function for easy logging
+    - Audit logs display page with pagination
 
 **Phase 1.5 - UX Improvement (Specification Change)** ✅ **COMPLETED**
 - ✅ **Ticket 016**: Facility database pre-registration & search function (Phase 1-3 completed)

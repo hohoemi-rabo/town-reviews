@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { validateSession } from '../../auth/route'
+import { createAuditLog } from '@/lib/audit-log'
 
 type RouteContext = {
   params: Promise<{
@@ -121,6 +122,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
+    // 監査ログを記録
+    await createAuditLog({
+      action: 'update',
+      targetType: 'facility',
+      targetId: id,
+      details: {
+        name: body.name.trim(),
+        name_kana: body.name_kana?.trim() || null,
+        address: body.address?.trim() || '',
+        area: body.area?.trim() || '',
+        category: body.category?.trim() || '',
+      },
+      adminIdentifier: 'admin',
+    })
+
     return NextResponse.json({
       success: true,
       message: '施設を更新しました',
@@ -182,6 +198,14 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         { status: 500 }
       )
     }
+
+    // 監査ログを記録
+    await createAuditLog({
+      action: 'delete',
+      targetType: 'facility',
+      targetId: id,
+      adminIdentifier: 'admin',
+    })
 
     return NextResponse.json({
       success: true,

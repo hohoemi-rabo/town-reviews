@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
+import { createAuditLog } from '@/lib/audit-log'
 
 const SESSION_COOKIE_NAME = 'admin_session'
 
@@ -53,6 +54,19 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // 監査ログを記録（各IDごとに記録）
+    await Promise.all(
+      ids.map((id) =>
+        createAuditLog({
+          action: 'delete',
+          targetType: 'recommendation',
+          targetId: id,
+          details: { bulk_delete: true },
+          adminIdentifier: 'admin',
+        })
+      )
+    )
 
     return NextResponse.json({
       success: true,
