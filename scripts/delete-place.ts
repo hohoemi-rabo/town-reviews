@@ -30,7 +30,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-const TARGET_ID = 'b36a9012-98bf-46fc-878a-bc2b59164715'
+const TARGET_ID = '71254387-bcb8-4805-bb36-e5f5e0a243c2'
 
 async function deletePlace() {
   console.log(`🗑️  施設を削除中... (ID: ${TARGET_ID})`)
