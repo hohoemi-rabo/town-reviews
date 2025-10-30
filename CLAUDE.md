@@ -110,6 +110,8 @@ This project uses Supabase for backend operations:
 - `recommendations` - User reviews with source attribution and review categories
   - Key fields: `heard_from`, `heard_from_type`, `note_raw`, `note_formatted`, `review_category`, `images`, `tags`, `season`
   - `review_category`: 'グルメ', '景色', '体験', '癒し', 'その他' (with CHECK constraint)
+  - `tags`: User-selected tags (27 options, max 3), array field - AI generation in Phase 2 as enhancement
+  - `season`: User-selected season ('春', '夏', '秋', '冬', or null), optional - AI extraction in Phase 2 as enhancement
   - `is_editable_until`: 24-hour edit window timestamp
   - `author_ip_hash`: SHA-256 hashed IP (never store raw IPs)
 - `reactions` - User reactions with columns: `id`, `recommendation_id`, `reaction_type`, `user_identifier`, `created_at`
@@ -134,12 +136,18 @@ This project uses Supabase for backend operations:
   - Supports `maps.app.goo.gl` shortened URLs
   - Falls back to Find Place from Text API if Place ID not found
   - **Note**: This API is deprecated in favor of facility search (Ticket 016)
-- `/api/recommendations` - POST: Create new recommendation with validation (includes review_category)
+- `/api/recommendations` - GET/POST: Manage recommendations
+  - GET: Fetch recommendations with filters (`facility_id`, `tags`, `season`, `heard_from_types`, `categories`, `search`)
+  - POST: Create new recommendation with validation (includes review_category, season, tags)
+- `/api/tags` - GET: Fetch all tags sorted by usage frequency (5-minute cache)
 - `/api/upload/image` - POST: Upload and convert images to WebP (max 1200px, quality 80%)
 - `/api/upload/image/[path]` - DELETE: Remove images from storage
 - `/api/reactions` - POST/DELETE: Manage reactions with optimistic updates
   - POST: Add reaction (duplicate check via `user_identifier`)
   - DELETE: Remove reaction
+- `/api/admin/auth` - POST/DELETE: Admin authentication (login/logout with session management)
+- `/api/admin/recommendations/[id]` - GET/PATCH/DELETE: Admin-only recommendation operations (uses service role key)
+- `/api/admin/recommendations/bulk-delete` - POST: Bulk delete recommendations (admin only)
 - `/api/admin/import-facilities` - **POST**: Bulk import facilities from CSV (admin only)
 - `/api/ai/*` - AI features: tone conversion, tag generation (Phase 2)
 
@@ -182,10 +190,22 @@ This project uses Supabase for backend operations:
 - **No authentication required** for posting (cookie-based edit window: 24h)
 - **Source attribution**: Who told you about this place (家族, 友人, 近所の人, etc.)
 - **Review categories**: Manual selection from グルメ, 景色, 体験, 癒し, その他
-  - AI auto-categorization planned for Phase 2 (Ticket 010)
   - Category badges displayed on review cards with color coding
+- **Season selection**: Optional manual selection (春, 夏, 秋, 冬) with visual emoji buttons
+- **Tag selection**: 27 predefined tags across 6 categories, max 3 per post
+  - 雰囲気・特徴 (7): 絶景, 穴場, 人気, 静か, 賑やか, レトロ, SNS映え
+  - 誰と行く (6): 家族向け, 子連れOK, デート向き, 一人でも楽しめる, 友人と, 団体OK
+  - 価格帯 (3): リーズナブル, 高級, 無料
+  - アクセス・設備 (4): 駅近, 車必須, 駐車場あり, バリアフリー
+  - 時間帯 (3): 朝がおすすめ, 昼がおすすめ, 夜がおすすめ
+  - 地域性・その他 (4): 地元民おすすめ, 観光客向け, 歴史的, 自然豊か
+- **Search & Filter**: Multiple filter options (category, season, tags, heard_from_types, keyword search)
+- **Admin Panel**: Password-protected admin interface for post management
+  - Authentication with session cookies
+  - Post editing/deletion (bypasses RLS with service role key)
+  - Bulk operations support
 - **Category-based pin colors**: 飲食=Orange, 体験=Blue, 自然=Green, 温泉=Brown
-- **AI features** (Phase 2): Tone softening, auto-tag generation, category auto-classification, monthly digest reports
+- **AI features** (Phase 2): Tone softening as enhancement (manual input remains primary)
 - **Mobile-first**: Optimized for 60+ age users with accessibility focus
 
 ### Security Notes
@@ -211,22 +231,37 @@ This project uses Supabase for backend operations:
   - **Important**: Uses singleton pattern for script loading to prevent duplicate API loads
 - `ReviewCard/*` - Card UI with optimized images, tags, reactions, source attribution, infinite scroll
 - `PostModal/PostModal.tsx` - 2-step post creation (facility search → form) **Updated in Ticket 016**
-- `PostModal/FacilitySearchInput.tsx` - **New**: Facility search with real-time suggestions, keyboard navigation
-- `PostModal/FacilityRequestModal.tsx` - **New**: Facility addition request form with email notification
+- `PostModal/FacilitySearchInput.tsx` - Facility search with real-time suggestions, keyboard navigation
+- `PostModal/FacilityRequestModal.tsx` - Facility addition request form with email notification
 - `PostModal/ImageUpload.tsx` - Drag & drop image upload with compression and preview
 - `PostModal/SourceSelector.tsx` - Information source selection (6 presets + other)
 - `PostModal/CategorySelector.tsx` - Review category selection (5 categories with emoji icons)
+- `PostModal/SeasonSelector.tsx` - **New**: Season selection with emoji buttons (optional)
+- `PostModal/TagSelector.tsx` - **New**: Tag selection with category accordion (27 tags, max 3)
+- `Filter/*` - Filter components for recommendation filtering
+  - `FilterPanel.tsx` - Desktop sidebar filter panel
+  - `FilterBottomSheet.tsx` - Mobile bottom sheet filter
+  - `CategoryFilter.tsx` - Review category filter (multiple selection)
+  - `TagFilter.tsx` - Tag filter with frequency count
+  - `SeasonFilter.tsx` - Season filter (single selection)
+  - `SourceFilter.tsx` - Information source filter (multiple selection)
+  - `FacilityFilter.tsx` - Facility filter (reuses FacilitySearchInput)
+  - `ContentSearchInput.tsx` - Debounced keyword search input
+- `Admin/*` - Admin panel components
+  - `EditRecommendationModal.tsx` - Edit modal with all fields (reuses SeasonSelector and TagSelector)
 - `Reaction/ReactionButtons.tsx` - Reaction buttons with optimistic updates and Realtime sync
 
 ### Utilities
 - `lib/google-maps.ts` - Map initialization, link parsing (supports shortened URLs), default settings
   - **Critical**: `loadGoogleMapsScript()` uses Promise caching and DOM checking to prevent multiple script loads
-- `lib/text-utils.ts` - **New**: Text conversion utilities (hiragana ⇔ katakana, full-width → half-width)
+- `lib/text-utils.ts` - Text conversion utilities (hiragana ⇔ katakana, full-width → half-width)
   - `generateSearchVariants()`: Creates search variants for facility search (e.g., "みかわ" → ["みかわ", "ミカワ"])
 - `lib/formatters.ts` - Time formatting, icons (heard_from, category), tag colors, review category emoji/colors
 - `lib/image-compression.ts` - Client-side image validation and compression
 - `lib/supabase/client.ts` - Browser-side Supabase client
 - `lib/supabase/server.ts` - Server-side Supabase client (with Next.js 15 async cookies)
+- `lib/supabase/admin.ts` - **New**: Admin-only Supabase client using service role key (bypasses RLS)
+  - ⚠️ **Critical**: Only use in server-side admin API routes, never expose to client
 - `lib/local-storage.ts` - LocalStorage management for user reactions (UUID-based tracking)
 - `styles/map-styles.ts` - Custom washi-themed Google Maps styles
 
@@ -238,6 +273,10 @@ This project uses Supabase for backend operations:
 - `hooks/useUserId.ts` - Generate and persist anonymous user UUID in LocalStorage
 - `hooks/useReactions.ts` - Fetch reaction counts and subscribe to Realtime updates
   - Exports `incrementCount` and `decrementCount` for optimistic updates
+- `hooks/useFilter.ts` - **New**: Filter state management with URL synchronization
+  - Manages facility_id, tags, season, heardFromTypes, categories, search
+  - Provides updateFilters, clearFilters, activeFilterCount
+- `hooks/useDebounce.ts` - **New**: Generic debounce hook (500ms default)
 
 ### Important Patterns
 - Main page (`app/page.tsx`) has map/list toggle view with real-time database fetching
@@ -380,18 +419,42 @@ When implementing these tickets, always check the "備考" (Remarks) section for
 - **Continuous**: Tickets 013-015 - Security, accessibility, legal compliance
 
 ### Current Implementation Status
-**Phase 1 - MVP (Progress: 7/9 completed - 78%)**
+**Phase 1 - MVP (Progress: 9/9 completed - 100%)** ✅ **COMPLETED**
 - ✅ **Ticket 001**: Project setup with Next.js 15, Supabase, Google Maps
 - ✅ **Ticket 002**: Database schema with 4 tables + RLS policies
 - ✅ **Ticket 003**: Google Maps display with clustering, current location, category pins
 - ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, image optimization
-- ✅ **Ticket 005**: Post modal with Google Maps URL parser, source selector, category selector, image upload
+- ✅ **Ticket 005**: Post modal with facility search, source selector, category selector, image upload
+  - **Enhanced**: Added season selection (春, 夏, 秋, 冬) with emoji buttons
+  - **Enhanced**: Added tag selection (27 predefined tags across 6 categories, max 3 per post)
+  - Review category feature (manual selection) integrated
+  - Database: `review_category`, `season`, `tags` columns with data validation
+  - UI: CategorySelector, SeasonSelector, TagSelector components
 - ✅ **Ticket 006**: Image optimization with WebP conversion, blur placeholders, deletion API
 - ✅ **Ticket 007**: Reaction feature (👍 行ってみたい button) with optimistic updates and Realtime sync
-  - **Latest**: Review category feature (manual selection) integrated into Ticket 005
-  - Database migration: `review_category` column added with CHECK constraint
-  - UI: CategorySelector component with 5 categories (グルメ, 景色, 体験, 癒し, その他)
-  - Display: Category badges on ReviewCard with color coding
+- ✅ **Ticket 008**: Search & filter (category, tags, season, heard_from_types, keyword search)
+  - Desktop: FilterPanel sidebar with all filter options
+  - Mobile: FilterBottomSheet with responsive design
+  - URL state synchronization for shareable filtered views
+  - Debounced keyword search (500ms) for recommendation content
+  - Filter components: CategoryFilter, TagFilter, SeasonFilter, SourceFilter, FacilityFilter, ContentSearchInput
+  - Real-time filter count display and clear filters functionality
+- ✅ **Ticket 009**: Admin panel (Phase 1-2 completed)
+  - **Phase 1**: Authentication & Foundation ✅
+    - Password-based authentication with session cookies
+    - Middleware protection for all `/admin/*` routes
+    - Admin layout with sidebar navigation
+    - Dashboard with statistics cards and quick actions
+  - **Phase 2**: Post Management ✅
+    - Post list with pagination (20 items/page)
+    - Search functionality for post content, facility name, author name
+    - Bulk selection and deletion
+    - Individual edit and delete operations
+    - EditRecommendationModal with all fields editable (reuses SeasonSelector, TagSelector)
+    - Badge display for category, season, and tags
+    - **Critical Fix**: Admin operations use service role key to bypass RLS
+  - **Phase 3**: Facility Management (pending - integrates Ticket 016 Phase 4)
+  - **Phase 4**: Statistics & Audit Logs (pending)
 
 **Phase 1.5 - UX Improvement (Specification Change)** ✅ **COMPLETED**
 - ✅ **Ticket 016**: Facility database pre-registration & search function (Phase 1-3 completed)
@@ -403,19 +466,7 @@ When implementing these tickets, always check the "備考" (Remarks) section for
   - **Phase 1**: Database schema, search API, facility request API ✅
   - **Phase 2**: FacilitySearchInput, FacilityRequestModal, PostModal refactor, hiragana search ✅
   - **Phase 3**: Google Places API import (130 facilities), CSV import/export ✅
-  - **Phase 4**: Admin panel expansion (pending)
-
-**Phase 1 Remaining Tasks**
-- 🟡 **Ticket 008**: Search & filter (category, area, tags, keyword search) - **NEXT**
-  - **Updated**: Reuses FacilitySearchInput from Ticket 016 for facility filtering
-  - Keyword search focuses on recommendation content (`note_formatted`) only
-  - Facility search is handled by existing `/api/facilities/search` API
-- 🟡 **Ticket 009**: Admin panel (post management, statistics)
-  - **Updated**: Integrates Ticket 016 Phase 4 (facility management) as Phase 3
-  - Phase 1: Authentication & Foundation
-  - Phase 2: Post Management
-  - Phase 3: Facility Management (facility requests, facility data, CSV import/export)
-  - Phase 4: Statistics & Audit Logs
+  - **Phase 4**: Admin panel expansion (pending - will be integrated into Ticket 009 Phase 3)
 
 ## Next.js App Router Best Practices
 

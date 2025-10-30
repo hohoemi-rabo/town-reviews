@@ -109,6 +109,8 @@ interface PostRequestBody {
   heardFrom: string
   note: string
   reviewCategory: string
+  season?: string | null
+  tags?: string[]
   images: string[]
   authorName: string | null
   isAnonymous: boolean
@@ -119,7 +121,7 @@ const VALID_REVIEW_CATEGORIES = ['グルメ', '景色', '体験', '癒し', 'そ
 export async function POST(request: NextRequest) {
   try {
     const body: PostRequestBody = await request.json()
-    const { place, heardFromType, heardFrom, note, reviewCategory, images, authorName, isAnonymous } = body
+    const { place, heardFromType, heardFrom, note, reviewCategory, season, tags, images, authorName, isAnonymous } = body
 
     // Validation
     if (!place || !place.placeId || !place.name) {
@@ -239,8 +241,8 @@ export async function POST(request: NextRequest) {
         note_raw: note,
         note_formatted: note, // TODO: AI tone conversion in Phase 2
         review_category: reviewCategory,
-        tags: [], // TODO: AI tag generation in Phase 2
-        season: null, // TODO: Can be extracted from note in Phase 2
+        tags: tags || [], // User-selected tags (AI generation in Phase 2 as enhancement)
+        season: season || null, // User-selected season (AI extraction in Phase 2 as enhancement)
         author_name: isAnonymous ? null : authorName,
         author_ip_hash: ipHash,
         is_anonymous: isAnonymous,

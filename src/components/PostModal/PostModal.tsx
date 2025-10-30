@@ -6,6 +6,8 @@ import ImageUpload from './ImageUpload'
 import CategorySelector from './CategorySelector'
 import FacilitySearchInput, { type Facility } from './FacilitySearchInput'
 import FacilityRequestModal from './FacilityRequestModal'
+import SeasonSelector from './SeasonSelector'
+import TagSelector from './TagSelector'
 
 interface PostModalProps {
   isOpen: boolean
@@ -36,6 +38,8 @@ export default function PostModal({
   const [heardFrom, setHeardFrom] = useState('')
   const [note, setNote] = useState('')
   const [reviewCategory, setReviewCategory] = useState('その他')
+  const [season, setSeason] = useState<string | null>(null)
+  const [tags, setTags] = useState<string[]>([])
   const [images, setImages] = useState<File[]>([])
   const [authorName, setAuthorName] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(true)
@@ -124,6 +128,8 @@ export default function PostModal({
           heardFrom: heardFromType === 'その他' ? heardFrom : '',
           note,
           reviewCategory,
+          season,
+          tags,
           images: imageUrls,
           authorName: isAnonymous ? null : authorName,
           isAnonymous,
@@ -262,6 +268,19 @@ export default function PostModal({
                 <CategorySelector
                   selectedCategory={reviewCategory}
                   onCategoryChange={setReviewCategory}
+                />
+
+                {/* Season selector */}
+                <SeasonSelector
+                  selectedSeason={season}
+                  onChange={setSeason}
+                />
+
+                {/* Tag selector */}
+                <TagSelector
+                  selectedTags={tags}
+                  onChange={setTags}
+                  maxTags={3}
                 />
 
                 {/* Author info */}
