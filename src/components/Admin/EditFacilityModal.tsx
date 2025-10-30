@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Tables } from '@/types/database.types'
 
-type Facility = Tables<'places'>
+type Facility = Tables<'places'> & { name_kana?: string | null }
 
 interface EditFacilityModalProps {
   isOpen: boolean

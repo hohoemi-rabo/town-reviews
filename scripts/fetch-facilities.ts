@@ -52,16 +52,26 @@ const PLACE_TYPES = [
   'shopping_mall', // ショッピングモール
   'store', // 店舗
   'point_of_interest', // その他の名所
+  'bakery', // パン屋
+  'convenience_store', // コンビニ
+  'supermarket', // スーパー
+  'clothing_store', // 衣料品店
+  'book_store', // 書店
+  'electronics_store', // 家電店
+  'furniture_store', // 家具店
+  'hardware_store', // ホームセンター
+  'pharmacy', // 薬局
+  'gas_station', // ガソリンスタンド
 ]
 
 // 検索半径（メートル）
-const SEARCH_RADIUS = 30000 // 30km（飯田市中心から下伊那全域をカバー）
+const SEARCH_RADIUS = 50000 // 50km（飯田市中心から南信州広域をカバー）
 
 // レート制限対策（ミリ秒）
 const DELAY_BETWEEN_REQUESTS = 100 // 100ms
 
 // 取得する最大施設数
-const MAX_FACILITIES = 500
+const MAX_FACILITIES = 1000
 
 type PlaceResult = {
   place_id: string
@@ -156,7 +166,11 @@ async function getPlaceDetails(placeId: string): Promise<PlaceResult | null> {
 
 // カテゴリ判定（Google types → アプリのカテゴリ）
 function categorizePlace(types: string[]): string {
-  if (types.some((t) => ['restaurant', 'cafe', 'food', 'meal_takeaway'].includes(t))) {
+  if (
+    types.some((t) =>
+      ['restaurant', 'cafe', 'food', 'meal_takeaway', 'bakery'].includes(t)
+    )
+  ) {
     return '飲食'
   }
   if (
@@ -171,6 +185,25 @@ function categorizePlace(types: string[]): string {
   }
   if (types.some((t) => ['spa', 'lodging'].includes(t))) {
     return '温泉'
+  }
+  if (
+    types.some((t) =>
+      [
+        'store',
+        'shopping_mall',
+        'convenience_store',
+        'supermarket',
+        'clothing_store',
+        'book_store',
+        'electronics_store',
+        'furniture_store',
+        'hardware_store',
+        'pharmacy',
+        'gas_station',
+      ].includes(t)
+    )
+  ) {
+    return '買い物'
   }
   return 'その他'
 }
@@ -198,12 +231,29 @@ function detectArea(address: string): string | null {
     '根羽村',
     '下伊那郡',
     '木曽郡',
+    // 追加エリア（50km圏内）
+    '駒ヶ根市',
+    '伊那市',
+    '辰野町',
+    '箕輪町',
+    '飯島町',
+    '南箕輪村',
+    '中川村',
+    '宮田村',
+    '松川町',
+    '高森町',
+    '上伊那郡',
   ]
 
   for (const area of areaPatterns) {
     if (address.includes(area)) {
       return area
     }
+  }
+
+  // 長野県南部であれば受け入れる（エリア不明として）
+  if (address.includes('長野県')) {
+    return 'その他'
   }
 
   return null
@@ -254,35 +304,51 @@ async function main() {
     console.log(`\n📍 Searching for: ${type}`)
 
     try {
-      const searchResult = await searchNearbyPlaces(IIDA_CENTER, type)
+      let pageToken: string | undefined = undefined
+      let pageCount = 0
+      const MAX_PAGES = 3 // Google Places APIは最大3ページまで
 
-      for (const place of searchResult.results) {
-        if (allPlaces.size >= MAX_FACILITIES) {
-          console.log(`\n⚠️  Reached max limit (${MAX_FACILITIES}). Stopping.`)
-          break
-        }
+      // ページネーション対応（最大60件/カテゴリ）
+      do {
+        const searchResult = await searchNearbyPlaces(IIDA_CENTER, type, pageToken)
 
-        if (allPlaces.has(place.place_id)) {
-          continue // 重複スキップ
-        }
+        for (const place of searchResult.results) {
+          if (allPlaces.size >= MAX_FACILITIES) {
+            console.log(`\n⚠️  Reached max limit (${MAX_FACILITIES}). Stopping.`)
+            break
+          }
 
-        console.log(`  Fetching details: ${place.name}`)
+          if (allPlaces.has(place.place_id)) {
+            continue // 重複スキップ
+          }
 
-        const details = await getPlaceDetails(place.place_id)
+          console.log(`  Fetching details: ${place.name}`)
 
-        if (details) {
-          // 南信州エリア外の施設は除外
-          const area = detectArea(details.address)
-          if (area) {
-            allPlaces.set(place.place_id, details)
-            console.log(`    ✅ Added (${allPlaces.size}/${MAX_FACILITIES})`)
-          } else {
-            console.log(`    ⏭️  Skipped (outside target area)`)
+          const details = await getPlaceDetails(place.place_id)
+
+          if (details) {
+            // 南信州エリア外の施設は除外
+            const area = detectArea(details.address)
+            if (area) {
+              allPlaces.set(place.place_id, details)
+              console.log(`    ✅ Added (${allPlaces.size}/${MAX_FACILITIES})`)
+            } else {
+              console.log(`    ⏭️  Skipped (outside target area)`)
+            }
           }
         }
-      }
 
-      await sleep(DELAY_BETWEEN_REQUESTS)
+        pageToken = searchResult.next_page_token
+        pageCount++
+
+        // next_page_tokenがある場合は少し待機（APIの仕様）
+        if (pageToken && pageCount < MAX_PAGES && allPlaces.size < MAX_FACILITIES) {
+          console.log(`  📄 Loading next page (${pageCount + 1}/${MAX_PAGES})...`)
+          await sleep(2000) // 2秒待機（Google推奨）
+        }
+
+        await sleep(DELAY_BETWEEN_REQUESTS)
+      } while (pageToken && pageCount < MAX_PAGES && allPlaces.size < MAX_FACILITIES)
     } catch (error) {
       console.error(`Error searching ${type}:`, error)
     }

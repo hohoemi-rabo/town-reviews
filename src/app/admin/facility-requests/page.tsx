@@ -48,7 +48,8 @@ export default function FacilityRequestsPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '不明'
     return new Date(dateString).toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: '2-digit',
@@ -58,7 +59,7 @@ export default function FacilityRequestsPage() {
     })
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-800',
       approved: 'bg-green-100 text-green-800',
@@ -69,8 +70,9 @@ export default function FacilityRequestsPage() {
       approved: '承認済み',
       rejected: '却下',
     }
-    const color = badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
-    const label = labels[status as keyof typeof labels] || status
+    const statusKey = status || 'pending'
+    const color = badges[statusKey as keyof typeof badges] || 'bg-gray-100 text-gray-800'
+    const label = labels[statusKey as keyof typeof labels] || statusKey
 
     return (
       <span className={`px-3 py-1 rounded-full text-sm font-medium ${color}`}>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Tables } from '@/types/database.types'
 import EditFacilityModal from '@/components/Admin/EditFacilityModal'
 
-type Facility = Tables<'places'>
+type Facility = Tables<'places'> & { name_kana?: string | null }
 
 export default function FacilitiesPage() {
   const [facilities, setFacilities] = useState<Facility[]>([])
@@ -136,9 +136,11 @@ export default function FacilitiesPage() {
   }
 
   // Get unique areas and categories for filters
-  const uniqueAreas = Array.from(new Set(facilities.map((f) => f.area).filter(Boolean)))
+  const uniqueAreas = Array.from(
+    new Set(facilities.map((f) => f.area).filter((area): area is string => Boolean(area)))
+  )
   const uniqueCategories = Array.from(
-    new Set(facilities.map((f) => f.category).filter(Boolean))
+    new Set(facilities.map((f) => f.category).filter((cat): cat is string => Boolean(cat)))
   )
 
   // Pagination

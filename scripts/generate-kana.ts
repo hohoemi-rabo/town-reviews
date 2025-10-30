@@ -54,7 +54,7 @@ async function main() {
   console.log('Fetching facilities from database...')
   const response = await fetch(`${SUPABASE_URL}/rest/v1/places?select=id,name,name_kana`, {
     headers: {
-      apikey: SUPABASE_SERVICE_KEY,
+      apikey: SUPABASE_SERVICE_KEY as string,
       Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
     },
   })
@@ -98,7 +98,7 @@ async function main() {
         {
           method: 'PATCH',
           headers: {
-            apikey: SUPABASE_SERVICE_KEY,
+            apikey: SUPABASE_SERVICE_KEY as string,
             Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
             'Content-Type': 'application/json',
             Prefer: 'return=minimal',

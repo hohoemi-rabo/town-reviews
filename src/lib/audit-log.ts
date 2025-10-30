@@ -24,7 +24,8 @@ export async function createAuditLog({
   try {
     const supabase = createAdminClient()
 
-    const { error } = await supabase.from('audit_logs').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from('audit_logs').insert({
       action,
       target_type: targetType,
       target_id: targetId || null,

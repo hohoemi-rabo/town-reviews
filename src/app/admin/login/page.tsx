@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
@@ -84,12 +85,12 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a
+          <Link
             href="/"
             className="text-sm text-washi-green hover:underline"
           >
             ← トップページに戻る
-          </a>
+          </Link>
         </div>
       </div>
     </div>

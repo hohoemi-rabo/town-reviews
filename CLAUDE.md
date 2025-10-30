@@ -781,3 +781,49 @@ import ServerComponent from './server-component' // ERROR
   <ServerComponent />
 </ClientComponent>
 ```
+
+### Next.js 15 Specific Issues
+
+**useSearchParams() Requires Suspense Boundary:**
+- Next.js 15 enforces Suspense boundaries for `useSearchParams()` to prevent build errors
+- ❌ Wrong: Using `useSearchParams()` directly in page without Suspense
+- ✅ Correct: Wrap Client Components using `useSearchParams()` in Suspense
+
+```tsx
+// app/page.tsx - Server Component
+import { Suspense } from 'react'
+import HomeClient from './HomeClient'
+
+export default function Home() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <HomeClient />
+    </Suspense>
+  )
+}
+
+// HomeClient.tsx - Client Component with useSearchParams
+'use client'
+import { useSearchParams } from 'next/navigation'
+
+export default function HomeClient() {
+  const searchParams = useSearchParams()
+  // ... component logic
+}
+```
+
+**Missing Type Properties from Generated Types:**
+- ❌ Wrong: Assuming all database columns are in `database.types.ts`
+- ✅ Correct: Extend generated types for additional properties
+```typescript
+// Some properties may be missing from generated types
+type Facility = Tables<'places'> & { name_kana?: string | null }
+```
+
+**Tables Not in Generated Types (e.g., audit_logs):**
+- ❌ Wrong: Using table name directly with strict types
+- ✅ Correct: Use type assertion with eslint-disable for tables not in schema
+```typescript
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { data } = await (supabase as any).from('audit_logs').select('*')
+```
