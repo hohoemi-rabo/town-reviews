@@ -148,6 +148,10 @@ This project uses Supabase for backend operations:
 - `/api/admin/auth` - POST/DELETE: Admin authentication (login/logout with session management)
 - `/api/admin/recommendations/[id]` - GET/PATCH/DELETE: Admin-only recommendation operations (uses service role key)
 - `/api/admin/recommendations/bulk-delete` - POST: Bulk delete recommendations (admin only)
+- `/api/admin/facilities` - GET: Fetch facilities with search/filters (admin only, debounced 1 second)
+- `/api/admin/facilities/[id]` - GET/PATCH/DELETE: Individual facility operations (admin only)
+- `/api/admin/facility-requests` - GET: List facility addition requests with status filter
+- `/api/admin/facility-requests/[id]` - PATCH: Approve/reject facility requests (creates place on approval)
 - `/api/admin/import-facilities` - **POST**: Bulk import facilities from CSV (admin only)
 - `/api/ai/*` - AI features: tone conversion, tag generation (Phase 2)
 
@@ -249,6 +253,9 @@ This project uses Supabase for backend operations:
   - `ContentSearchInput.tsx` - Debounced keyword search input
 - `Admin/*` - Admin panel components
   - `EditRecommendationModal.tsx` - Edit modal with all fields (reuses SeasonSelector and TagSelector)
+  - `ApproveFacilityModal.tsx` - Modal for approving facility requests with manual data entry
+  - `RejectFacilityModal.tsx` - Modal for rejecting facility requests with reason
+  - `EditFacilityModal.tsx` - Modal for editing facility information
 - `Reaction/ReactionButtons.tsx` - Reaction buttons with optimistic updates and Realtime sync
 
 ### Utilities
@@ -383,6 +390,34 @@ export function loadGoogleMapsScript(): Promise<void> {
    import { type ExtendedRecommendation } from '@/components/ReviewCard/ReviewList'
    ```
 
+5. **Unique Constraint Fields with Empty Values**
+   - ❌ Wrong: Setting empty string for unique constraint fields
+   ```typescript
+   place_id: placeData.place_id || '' // Causes duplicate key violation
+   ```
+   - ✅ Correct: Use `null` for empty unique constraint fields
+   ```typescript
+   place_id: placeData.place_id || null // Allows multiple NULL values
+   ```
+   - Important: SQL allows multiple `NULL` values in unique constraint fields, but not multiple empty strings
+
+6. **RLS Policies with SELECT After INSERT**
+   - ❌ Wrong: Only INSERT policy when using `.insert().select()`
+   - ✅ Correct: Both INSERT and SELECT policies required
+   ```sql
+   -- Need both policies for .insert().select().single() pattern
+   CREATE POLICY "Allow insert" ON table FOR INSERT TO anon WITH CHECK (true);
+   CREATE POLICY "Allow select" ON table FOR SELECT TO anon USING (true);
+   ```
+
+7. **CSV Export with Japanese Characters**
+   - ❌ Wrong: Direct CSV export causes Excel garbled text
+   - ✅ Correct: Add BOM (Byte Order Mark) for Excel UTF-8 recognition
+   ```typescript
+   const bom = '\uFEFF'
+   const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+   ```
+
 ## Development Workflow
 
 ### Feature Tickets and Todo Management
@@ -439,7 +474,7 @@ When implementing these tickets, always check the "備考" (Remarks) section for
   - Debounced keyword search (500ms) for recommendation content
   - Filter components: CategoryFilter, TagFilter, SeasonFilter, SourceFilter, FacilityFilter, ContentSearchInput
   - Real-time filter count display and clear filters functionality
-- ✅ **Ticket 009**: Admin panel (Phase 1-2 completed)
+- ✅ **Ticket 009**: Admin panel (Phase 1-3 completed)
   - **Phase 1**: Authentication & Foundation ✅
     - Password-based authentication with session cookies
     - Middleware protection for all `/admin/*` routes
@@ -453,7 +488,17 @@ When implementing these tickets, always check the "備考" (Remarks) section for
     - EditRecommendationModal with all fields editable (reuses SeasonSelector, TagSelector)
     - Badge display for category, season, and tags
     - **Critical Fix**: Admin operations use service role key to bypass RLS
-  - **Phase 3**: Facility Management (pending - integrates Ticket 016 Phase 4)
+  - **Phase 3**: Facility Management ✅
+    - Facility addition request management (list, approve, reject)
+    - Status filters (all, pending, approved, rejected)
+    - Facility data management (CRUD operations)
+    - Search with 1-second debounce, area/category filters
+    - CSV export with BOM for Excel compatibility
+    - ApproveFacilityModal, RejectFacilityModal, EditFacilityModal components
+    - **Critical Fixes**:
+      - RLS policies for `facility_requests` (INSERT + SELECT required)
+      - `place_id` NULL constraint removal (allows manual facility addition)
+      - Empty string → NULL for unique constraint fields
   - **Phase 4**: Statistics & Audit Logs (pending)
 
 **Phase 1.5 - UX Improvement (Specification Change)** ✅ **COMPLETED**
