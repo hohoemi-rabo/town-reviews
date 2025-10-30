@@ -29,16 +29,28 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      // TODO: 統計APIを実装したら置き換え
-      // 現在はダミーデータ
-      setStats({
-        totalRecommendations: 0,
-        totalFacilities: 130, // Ticket 016で130件登録済み
-        totalReactions: 0,
-        pendingRequests: 0,
-        todayRecommendations: 0,
-        thisMonthRecommendations: 0,
-      })
+      const response = await fetch('/api/admin/stats')
+      const data = await response.json()
+
+      if (data.success) {
+        // 今日の投稿数を計算
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        // 承認待ちリクエスト数を取得
+        const requestsRes = await fetch('/api/admin/facility-requests?status=pending')
+        const requestsData = await requestsRes.json()
+        const pendingCount = requestsData.success ? requestsData.requests.length : 0
+
+        setStats({
+          totalRecommendations: data.stats.posts.total,
+          totalFacilities: data.stats.facilities.total,
+          totalReactions: data.stats.reactions.total,
+          pendingRequests: pendingCount,
+          todayRecommendations: 0, // TODO: 今日の投稿数を計算する場合はAPI拡張が必要
+          thisMonthRecommendations: data.stats.posts.monthly,
+        })
+      }
     } catch (error) {
       console.error('Failed to fetch stats:', error)
     } finally {
