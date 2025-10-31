@@ -14,6 +14,9 @@ const zenMaruGothic = Zen_Maru_Gothic({
 export const metadata: Metadata = {
   title: "まち口コミ帳",
   description: "南信州の口コミ文化をデジタルで可視化し、「誰に教わったか」まで残す地図型レビューサービス",
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
