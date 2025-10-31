@@ -149,11 +149,28 @@ export async function POST(req: NextRequest) {
 
     for (const facility of facilities) {
       try {
+        // Convert null to undefined for Supabase compatibility
+        const facilityData = {
+          name: facility.name,
+          name_kana: facility.name_kana ?? undefined,
+          address: facility.address,
+          area: facility.area,
+          category: facility.category,
+          lat: facility.lat,
+          lng: facility.lng,
+          place_id: facility.place_id ?? undefined,
+          google_maps_url: facility.google_maps_url ?? undefined,
+          phone: facility.phone ?? undefined,
+          is_verified: facility.is_verified,
+          created_by: facility.created_by,
+        }
+
         if (facility.id) {
           // Update existing record
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { error } = await supabase
             .from('places')
-            .update(facility)
+            .update(facilityData as any)
             .eq('id', facility.id)
 
           if (error) {
@@ -164,9 +181,8 @@ export async function POST(req: NextRequest) {
           }
         } else {
           // Insert new record
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, ...facilityData } = facility // Remove undefined id
-          const { error } = await supabase.from('places').insert(facilityData)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error } = await supabase.from('places').insert(facilityData as any)
 
           if (error) {
             dbErrors.push(`新規 (${facility.name}): ${error.message}`)
