@@ -1,38 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { validateSession } from '../auth/route'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * CSVファイルから施設データを一括インポートするAPI
  *
- * Expected CSV format:
- * place_id,name,address,area,category,lat,lng,phone,google_maps_url,is_verified,created_by
+ * Expected CSV format (same as export):
+ * id,name,name_kana,address,area,category,lat,lng,place_id,google_maps_url,phone,is_verified,created_by,created_at
  *
- * Note: Admin only (service_role key required)
+ * Note: Admin only
  */
 
 type FacilityRow = {
-  place_id: string
+  id?: string // Optional for new records
   name: string
+  name_kana?: string | null
   address: string
   area: string
   category: string
   lat: number
   lng: number
-  phone?: string
-  google_maps_url?: string
+  place_id: string | null
+  google_maps_url?: string | null
+  phone?: string | null
   is_verified: boolean
   created_by: string
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // Admin password check
-    const adminPassword = req.headers.get('x-admin-password')
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    // Admin authentication check
+    const isAuthenticated = await validateSession()
+    if (!isAuthenticated) {
       return NextResponse.json(
         {
           success: false,
-          error: '管理者権限がありません',
+          error: '認証が必要です',
         },
         { status: 401 }
       )
@@ -76,35 +79,46 @@ export async function POST(req: NextRequest) {
       try {
         const row = parseCSVLine(dataLines[i])
 
-        if (row.length < 11) {
-          errors.push(`Row ${i + 2}: 列数が不足しています (${row.length}/11)`)
+        if (row.length < 14) {
+          errors.push(`Row ${i + 2}: 列数が不足しています (${row.length}/14)`)
           continue
         }
 
         const [
-          place_id,
+          id,
           name,
+          name_kana,
           address,
           area,
           category,
           lat,
           lng,
-          phone,
+          place_id,
           google_maps_url,
+          phone,
           is_verified,
           created_by,
+          // created_at is ignored - will be set by database
         ] = row
 
+        // Skip empty rows
+        if (!name || !area || !category) {
+          errors.push(`Row ${i + 2}: 必須フィールド（name, area, category）が空です`)
+          continue
+        }
+
         facilities.push({
-          place_id,
+          id: id || undefined, // Undefined will let database generate new UUID
           name,
+          name_kana: name_kana || null,
           address,
           area,
           category,
           lat: parseFloat(lat),
           lng: parseFloat(lng),
-          phone: phone || undefined,
-          google_maps_url: google_maps_url || undefined,
+          place_id: place_id || null,
+          google_maps_url: google_maps_url || null,
+          phone: phone || null,
           is_verified: is_verified === 'true',
           created_by,
         })
@@ -124,22 +138,54 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Insert into database using service_role
-    const supabase = await createClient()
+    // Insert into database using admin client (bypasses RLS)
+    const supabase = createAdminClient()
 
-    // Use upsert to handle duplicates (based on place_id unique constraint)
-    const { data, error } = await supabase.from('places').upsert(facilities, {
-      onConflict: 'place_id',
-      ignoreDuplicates: false, // Update existing records
-    })
+    // Process each facility: update if id exists, insert if not
+    let successCount = 0
+    let updateCount = 0
+    let insertCount = 0
+    const dbErrors: string[] = []
 
-    if (error) {
-      console.error('Database insert error:', error)
+    for (const facility of facilities) {
+      try {
+        if (facility.id) {
+          // Update existing record
+          const { error } = await supabase
+            .from('places')
+            .update(facility)
+            .eq('id', facility.id)
+
+          if (error) {
+            dbErrors.push(`ID ${facility.id} (${facility.name}): ${error.message}`)
+          } else {
+            updateCount++
+            successCount++
+          }
+        } else {
+          // Insert new record
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...facilityData } = facility // Remove undefined id
+          const { error } = await supabase.from('places').insert(facilityData)
+
+          if (error) {
+            dbErrors.push(`新規 (${facility.name}): ${error.message}`)
+          } else {
+            insertCount++
+            successCount++
+          }
+        }
+      } catch (err) {
+        dbErrors.push(`${facility.name}: ${err}`)
+      }
+    }
+
+    if (successCount === 0 && dbErrors.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: 'データベースへの登録中にエラーが発生しました',
-          details: error.message,
+          error: 'すべてのレコードの登録に失敗しました',
+          details: dbErrors.join('\n'),
         },
         { status: 500 }
       )
@@ -147,9 +193,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `${facilities.length}件の施設データをインポートしました`,
-      imported: facilities.length,
-      errors: errors.length > 0 ? errors : undefined,
+      message: `インポート完了: 新規${insertCount}件、更新${updateCount}件`,
+      total: facilities.length,
+      inserted: insertCount,
+      updated: updateCount,
+      parseErrors: errors.length > 0 ? errors : undefined,
+      dbErrors: dbErrors.length > 0 ? dbErrors : undefined,
     })
   } catch (error) {
     console.error('Unexpected error in CSV import:', error)

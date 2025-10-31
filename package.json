@@ -13,7 +13,10 @@
     "bulk-import:phase2": "tsx scripts/fetch-facilities-bulk.ts --phase=2",
     "bulk-import:phase3": "tsx scripts/fetch-facilities-bulk.ts --phase=3",
     "bulk-import:resume": "tsx scripts/fetch-facilities-bulk.ts --resume",
-    "clear-places": "tsx scripts/clear-places.ts"
+    "clear-places": "tsx scripts/clear-places.ts",
+    "find-duplicates": "tsx scripts/find-duplicates.ts",
+    "remove-duplicates": "tsx scripts/remove-duplicates.ts",
+    "remove-duplicates:exec": "tsx scripts/remove-duplicates.ts --execute"
   },
   "dependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",

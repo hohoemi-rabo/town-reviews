@@ -15,6 +15,7 @@ export default function FacilitiesPage() {
   const [showOnlyVerified, setShowOnlyVerified] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null)
+  const [importing, setImporting] = useState(false)
   const itemsPerPage = 20
 
   // Debounce search query to avoid excessive API calls
@@ -80,10 +81,114 @@ export default function FacilitiesPage() {
     }
   }
 
-  const handleExportCSV = () => {
-    // CSV export functionality
-    const csv = generateCSV(facilities)
-    downloadCSV(csv, 'facilities.csv')
+  const handleExportCSV = async () => {
+    // CSV export functionality - fetch all facilities (not just current filtered view)
+    try {
+      setLoading(true)
+      const allFacilities = await fetchAllFacilities()
+      const csv = generateCSV(allFacilities)
+      downloadCSV(csv, 'facilities.csv')
+      alert(`${allFacilities.length}件の施設データをCSV出力しました`)
+    } catch (error) {
+      console.error('CSV export failed:', error)
+      alert('CSV出力に失敗しました')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      alert('CSVファイルを選択してください')
+      return
+    }
+
+    if (!confirm(`CSVファイル「${file.name}」をインポートしますか？\n既存の施設は更新され、新しい施設は追加されます。`)) {
+      return
+    }
+
+    setImporting(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/admin/import-facilities', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        let message = data.message
+
+        // Add details if available
+        if (data.parseErrors || data.dbErrors) {
+          message += '\n\n⚠️ 以下のエラーがありました:'
+          if (data.parseErrors) {
+            message += '\n\nパースエラー:\n' + data.parseErrors.slice(0, 5).join('\n')
+            if (data.parseErrors.length > 5) {
+              message += `\n...他${data.parseErrors.length - 5}件`
+            }
+          }
+          if (data.dbErrors) {
+            message += '\n\nデータベースエラー:\n' + data.dbErrors.slice(0, 5).join('\n')
+            if (data.dbErrors.length > 5) {
+              message += `\n...他${data.dbErrors.length - 5}件`
+            }
+          }
+        }
+
+        alert(message)
+        fetchFacilities() // Refresh the list
+      } else {
+        alert(`インポート失敗: ${data.error}\n\n${data.details || ''}`)
+      }
+    } catch (error) {
+      console.error('Import failed:', error)
+      alert('インポートに失敗しました')
+    } finally {
+      setImporting(false)
+      // Reset file input
+      event.target.value = ''
+    }
+  }
+
+  const fetchAllFacilities = async (): Promise<Facility[]> => {
+    // Fetch all facilities with pagination (Supabase limit is 1000 per request)
+    const allFacilities: Facility[] = []
+    let offset = 0
+    const limit = 1000
+
+    while (true) {
+      const params = new URLSearchParams()
+      params.append('offset', offset.toString())
+      params.append('limit', limit.toString())
+      // Note: Don't apply filters for CSV export - export all data
+
+      const response = await fetch(`/api/admin/facilities?${params.toString()}`)
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || '施設の取得に失敗しました')
+      }
+
+      const batch = data.facilities as Facility[]
+      allFacilities.push(...batch)
+
+      // If we got less than the limit, we've reached the end
+      if (batch.length < limit) {
+        break
+      }
+
+      offset += limit
+    }
+
+    return allFacilities
   }
 
   const generateCSV = (data: Facility[]) => {
@@ -127,14 +232,6 @@ export default function FacilitiesPage() {
     link.click()
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  }
-
   // Get unique areas and categories for filters
   const uniqueAreas = Array.from(
     new Set(facilities.map((f) => f.area).filter((area): area is string => Boolean(area)))
@@ -163,9 +260,24 @@ export default function FacilitiesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-washi-green">施設管理</h1>
         <div className="flex gap-2">
+          <label
+            className={`px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors cursor-pointer ${
+              importing ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {importing ? '📤 処理中...' : '📤 CSV取込'}
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              disabled={importing}
+              className="hidden"
+            />
+          </label>
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             📥 CSV出力
           </button>

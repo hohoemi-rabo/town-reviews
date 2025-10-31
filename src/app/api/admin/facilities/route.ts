@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
     const areaFilter = searchParams.get('area')
     const categoryFilter = searchParams.get('category')
     const showOnlyVerified = searchParams.get('verified') === 'true'
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const limit = parseInt(searchParams.get('limit') || '1000', 10)
 
     const supabase = createAdminClient()
 
@@ -50,6 +52,9 @@ export async function GET(request: NextRequest) {
     if (showOnlyVerified) {
       query = query.eq('is_verified', true)
     }
+
+    // Add pagination support (offset and limit)
+    query = query.range(offset, offset + limit - 1)
 
     const { data, error } = await query
 
