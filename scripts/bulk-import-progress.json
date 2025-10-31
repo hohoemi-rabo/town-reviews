@@ -1,0 +1,12 @@
+{
+  "phase": 1,
+  "currentAreaIndex": 5,
+  "currentTypeIndex": 0,
+  "totalProcessed": 3428,
+  "totalInserted": 1126,
+  "totalDuplicates": 2045,
+  "totalErrors": 0,
+  "startedAt": "2025-10-31T01:06:47.358Z",
+  "lastUpdatedAt": "2025-10-31T01:19:25.373Z",
+  "completed": true
+}

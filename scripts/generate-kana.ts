@@ -50,22 +50,41 @@ async function main() {
   await kuroshiro.init(new KuromojiAnalyzer())
   console.log('✅ Kuroshiro initialized\n')
 
-  // Fetch all facilities from Supabase
+  // Fetch all facilities from Supabase (paginated to handle more than 1000 records)
   console.log('Fetching facilities from database...')
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/places?select=id,name,name_kana`, {
-    headers: {
-      apikey: SUPABASE_SERVICE_KEY as string,
-      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-    },
-  })
+  const facilities: Facility[] = []
+  let offset = 0
+  const limit = 1000
 
-  if (!response.ok) {
-    console.error('Failed to fetch facilities:', await response.text())
-    process.exit(1)
+  while (true) {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/places?select=id,name,name_kana&limit=${limit}&offset=${offset}`,
+      {
+        headers: {
+          apikey: SUPABASE_SERVICE_KEY as string,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      console.error('Failed to fetch facilities:', await response.text())
+      process.exit(1)
+    }
+
+    const batch: Facility[] = await response.json()
+    facilities.push(...batch)
+
+    console.log(`  Fetched ${batch.length} facilities (total: ${facilities.length})`)
+
+    if (batch.length < limit) {
+      break // No more records
+    }
+
+    offset += limit
   }
 
-  const facilities: Facility[] = await response.json()
-  console.log(`✅ Found ${facilities.length} facilities\n`)
+  console.log(`✅ Found ${facilities.length} facilities in total\n`)
 
   // Filter facilities that don't have kana yet
   const facilitiesWithoutKana = facilities.filter((f) => !f.name_kana)
