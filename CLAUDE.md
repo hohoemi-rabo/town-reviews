@@ -547,6 +547,35 @@ npm run bulk-import:resume
      - Name + Address match (施設名＋住所一致)
    - Keeps newest record (by `created_at`), deletes older ones
 
+10. **Google Maps API Configuration for Production Deployment**
+   - Problem: `RefererNotAllowedMapError` when deploying to Vercel
+   - **Root Cause**: API key not configured to allow production domain
+   - Solution: Configure HTTP Referrer restrictions in Google Cloud Console
+
+   **Steps to fix:**
+   1. Go to Google Cloud Console → APIs & Services → Credentials
+   2. Find the API key matching `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (client-side key)
+   3. Click on the key to edit
+   4. **Application restrictions**: Select 🔘 **HTTP referrers (web sites)**
+   5. **Website restrictions**: Add the following:
+      ```
+      http://localhost:3000/*
+      https://localhost:3000/*
+      https://your-domain.vercel.app/*
+      ```
+   6. **API restrictions**: Select 🔘 **Restrict key** and enable:
+      - ✅ Maps JavaScript API
+      - ✅ Places API
+   7. Click **Save**
+   8. Wait 2-5 minutes for changes to propagate
+   9. Clear browser cache and reload
+
+   **Important**: Two API keys are used in this project:
+   - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - Client-side (needs HTTP referrer restrictions)
+   - `GOOGLE_MAPS_SERVER_API_KEY` - Server-side (needs IP address restrictions or none)
+
+   **Security Note**: After deployment, verify both keys in Vercel Environment Variables match the keys in Google Cloud Console
+
 ## Development Workflow
 
 ### Feature Tickets and Todo Management
