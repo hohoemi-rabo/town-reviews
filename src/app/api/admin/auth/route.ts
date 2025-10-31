@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 /**
  * ログアウト処理
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value

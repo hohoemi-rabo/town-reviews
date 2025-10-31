@@ -149,28 +149,31 @@ export async function POST(req: NextRequest) {
 
     for (const facility of facilities) {
       try {
-        // Convert null to undefined for Supabase compatibility
-        const facilityData = {
+        // Build facility data with conditional fields
+        // Note: Type definition requires place_id as string, but database allows NULL
+        const facilityData: Record<string, unknown> = {
           name: facility.name,
-          name_kana: facility.name_kana ?? undefined,
           address: facility.address,
           area: facility.area,
           category: facility.category,
           lat: facility.lat,
           lng: facility.lng,
-          place_id: facility.place_id ?? undefined,
-          google_maps_url: facility.google_maps_url ?? undefined,
-          phone: facility.phone ?? undefined,
           is_verified: facility.is_verified,
           created_by: facility.created_by,
         }
 
+        // Add optional fields only if they have values
+        if (facility.name_kana) facilityData.name_kana = facility.name_kana
+        if (facility.place_id) facilityData.place_id = facility.place_id
+        if (facility.google_maps_url) facilityData.google_maps_url = facility.google_maps_url
+        if (facility.phone) facilityData.phone = facility.phone
+
         if (facility.id) {
           // Update existing record
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error } = await supabase
+          const { error } = await (supabase as any)
             .from('places')
-            .update(facilityData as any)
+            .update(facilityData)
             .eq('id', facility.id)
 
           if (error) {
@@ -182,7 +185,7 @@ export async function POST(req: NextRequest) {
         } else {
           // Insert new record
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error } = await supabase.from('places').insert(facilityData as any)
+          const { error } = await (supabase as any).from('places').insert(facilityData)
 
           if (error) {
             dbErrors.push(`新規 (${facility.name}): ${error.message}`)
