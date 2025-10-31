@@ -1,0 +1,230 @@
+[
+  {
+    "timestamp": "2025-10-31T14:30:36.437Z",
+    "area": "飯田市中心部",
+    "type": "restaurant",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:30:36.762Z",
+    "area": "飯田市中心部",
+    "type": "cafe",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:30:41.256Z",
+    "area": "飯田市中心部",
+    "type": "bar",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:30:43.686Z",
+    "area": "飯田市中心部",
+    "type": "bakery",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:30:50.106Z",
+    "area": "飯田市中心部",
+    "type": "meal_takeaway",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:30:50.950Z",
+    "area": "飯田市中心部",
+    "type": "meal_takeaway",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:30:53.007Z",
+    "area": "飯田市中心部",
+    "type": "meal_takeaway",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:30:54.997Z",
+    "area": "飯田市中心部",
+    "type": "meal_takeaway",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:30:55.051Z",
+    "area": "飯田市中心部",
+    "type": "meal_takeaway",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:30:58.997Z",
+    "area": "飯田市中心部",
+    "type": "meal_takeaway",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:31:32.131Z",
+    "area": "飯田市中心部",
+    "type": "meal_delivery",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:31:34.585Z",
+    "area": "飯田市中心部",
+    "type": "tourist_attraction",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:31:41.604Z",
+    "area": "飯田市中心部",
+    "type": "park",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:31:43.642Z",
+    "area": "飯田市中心部",
+    "type": "park",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:31:46.871Z",
+    "area": "飯田市中心部",
+    "type": "park",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:02.700Z",
+    "area": "飯田市中心部",
+    "type": "park",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:06.019Z",
+    "area": "飯田市中心部",
+    "type": "park",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:32.075Z",
+    "area": "飯田市中心部",
+    "type": "aquarium",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:32:40.161Z",
+    "area": "飯田市中心部",
+    "type": "lodging",
+    "error": "API Error: REQUEST_DENIED - API keys with referer restrictions cannot be used with this API."
+  },
+  {
+    "timestamp": "2025-10-31T14:32:45.704Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:48.692Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:48.739Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:50.042Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:50.738Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:50.803Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:51.486Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:51.556Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:52.286Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:52.340Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:52.390Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:53.730Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:55.033Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:55.700Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:55.755Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:56.445Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T14:32:59.013Z",
+    "area": "飯田市中心部",
+    "type": "hotel",
+    "error": "API Error: REQUEST_DENIED"
+  },
+  {
+    "timestamp": "2025-10-31T15:01:03.956Z",
+    "area": "飯田市西部",
+    "type": "restaurant",
+    "error": "API Error: UNKNOWN_ERROR - "
+  },
+  {
+    "timestamp": "2025-10-31T15:01:04.616Z",
+    "area": "飯田市西部",
+    "type": "cafe",
+    "error": "API Error: UNKNOWN_ERROR - "
+  }
+]

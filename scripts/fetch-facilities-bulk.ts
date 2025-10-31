@@ -17,6 +17,10 @@
 import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as dotenv from 'dotenv'
+
+// .env.localファイルから環境変数を読み込む
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -195,27 +199,60 @@ class BulkFacilityImporter {
     console.log(`✅ 既存施設: ${this.existingPlaceIds.size}件`)
   }
 
-  // Google Places API: Nearby Search
+  // Google Places API: Nearby Search (with pagination support)
   private async nearbySearch(
     location: { lat: number; lng: number },
     radius: number,
     type: string
   ): Promise<any[]> {
-    const url = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json')
-    url.searchParams.set('location', `${location.lat},${location.lng}`)
-    url.searchParams.set('radius', radius.toString())
-    url.searchParams.set('type', type)
-    url.searchParams.set('key', GOOGLE_MAPS_API_KEY)
-    url.searchParams.set('language', 'ja')
+    let allResults: any[] = []
+    let nextPageToken: string | undefined = undefined
+    let pageCount = 0
+    const maxPages = 3 // Google Places API max pages
 
-    const response = await fetch(url.toString())
-    const data = await response.json()
+    do {
+      const url = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json')
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(`API Error: ${data.status} - ${data.error_message || ''}`)
+      if (nextPageToken) {
+        // Use page token for subsequent requests
+        url.searchParams.set('pagetoken', nextPageToken)
+        url.searchParams.set('key', GOOGLE_MAPS_API_KEY)
+
+        // Wait 2 seconds before fetching next page (required by Google API)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      } else {
+        // Initial request
+        url.searchParams.set('location', `${location.lat},${location.lng}`)
+        url.searchParams.set('radius', radius.toString())
+        url.searchParams.set('type', type)
+        url.searchParams.set('key', GOOGLE_MAPS_API_KEY)
+        url.searchParams.set('language', 'ja')
+      }
+
+      const response = await fetch(url.toString())
+      const data = await response.json()
+
+      if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+        throw new Error(`API Error: ${data.status} - ${data.error_message || ''}`)
+      }
+
+      const results = data.results || []
+      allResults = allResults.concat(results)
+
+      nextPageToken = data.next_page_token
+      pageCount++
+
+      if (nextPageToken && pageCount < maxPages) {
+        console.log(`    📄 Page ${pageCount + 1} available, fetching...`)
+      }
+
+    } while (nextPageToken && pageCount < maxPages)
+
+    if (pageCount > 1) {
+      console.log(`    ✅ Fetched ${pageCount} pages, total ${allResults.length} results`)
     }
 
-    return data.results || []
+    return allResults
   }
 
   // Google Places API: Place Details
@@ -346,6 +383,9 @@ class BulkFacilityImporter {
           // Nearby Search
           const places = await this.nearbySearch(area.center, area.radius, facilityType)
           console.log(`    結果: ${places.length}件`)
+
+          // レート制限対策（Nearby Search API呼び出し間に遅延）
+          await new Promise(resolve => setTimeout(resolve, 100))
 
           let inserted = 0
           let duplicates = 0

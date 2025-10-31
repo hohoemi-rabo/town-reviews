@@ -2,11 +2,11 @@
   "phase": 1,
   "currentAreaIndex": 5,
   "currentTypeIndex": 0,
-  "totalProcessed": 3428,
-  "totalInserted": 1126,
-  "totalDuplicates": 2045,
-  "totalErrors": 0,
-  "startedAt": "2025-10-31T01:06:47.358Z",
-  "lastUpdatedAt": "2025-10-31T01:19:25.373Z",
+  "totalProcessed": 6970,
+  "totalInserted": 2161,
+  "totalDuplicates": 4309,
+  "totalErrors": 38,
+  "startedAt": "2025-10-31T14:30:35.643Z",
+  "lastUpdatedAt": "2025-10-31T15:04:12.847Z",
   "completed": true
 }
