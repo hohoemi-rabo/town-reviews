@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
           lng,
           category,
           address,
+          google_maps_url,
           created_at
         )
       `)
@@ -194,41 +195,9 @@ export async function POST(request: NextRequest) {
     const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0'
     const ipHash = crypto.createHash('sha256').update(ipAddress).digest('hex')
 
-    // 1. Insert or get place
-    const { data: existingPlace } = await supabase
-      .from('places')
-      .select('id')
-      .eq('place_id', place.placeId)
-      .single()
-
-    let placeDbId: string
-
-    if (existingPlace) {
-      placeDbId = existingPlace.id
-    } else {
-      const { data: newPlace, error: placeInsertError } = await supabase
-        .from('places')
-        .insert({
-          place_id: place.placeId,
-          name: place.name,
-          lat: place.lat,
-          lng: place.lng,
-          category: place.category,
-          address: place.address,
-        })
-        .select('id')
-        .single()
-
-      if (placeInsertError) {
-        console.error('Place insert error:', placeInsertError)
-        return NextResponse.json(
-          { error: 'スポットの登録に失敗しました' },
-          { status: 500 }
-        )
-      }
-
-      placeDbId = newPlace.id
-    }
+    // 1. Use the facility's database ID directly (no need to insert or lookup)
+    // The placeId is already the database UUID from the facility search
+    const placeDbId = place.placeId
 
     // 2. Insert recommendation
     const isEditableUntil = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours from now
@@ -260,6 +229,7 @@ export async function POST(request: NextRequest) {
           lng,
           category,
           address,
+          google_maps_url,
           created_at
         )
       `)

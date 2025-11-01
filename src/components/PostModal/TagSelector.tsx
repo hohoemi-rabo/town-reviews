@@ -38,7 +38,7 @@ const TAG_CATEGORIES = [
 export default function TagSelector({
   selectedTags,
   onChange,
-  maxTags = 3,
+  maxTags = 7,
 }: TagSelectorProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
 

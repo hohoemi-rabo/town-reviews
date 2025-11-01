@@ -17,6 +17,7 @@ import { useEditPermission } from '@/hooks/useEditPermission'
 interface ReviewCardProps {
   id: string
   spotName: string
+  googleMapsUrl: string | null
   heardFrom: string
   heardFromType: string
   note: string
@@ -34,6 +35,7 @@ interface ReviewCardProps {
 export default function ReviewCard({
   id,
   spotName,
+  googleMapsUrl,
   heardFrom,
   heardFromType,
   note,
@@ -76,20 +78,71 @@ export default function ReviewCard({
         </div> */}
       </div>
 
-      {/* Heard from */}
-      <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
-        <span aria-label={`情報源: ${heardFromType}`}>{getHeardFromIcon(heardFromType)}</span>
-        <span>
-          {heardFrom}から聞いた
-          {season && (
-            <>
-              {' '}
-              <span aria-label={`季節: ${season}`}>
-                {getSeasonEmoji(season)} {season}
-              </span>
-            </>
-          )}
+      {/* Google Maps link */}
+      {googleMapsUrl && (
+        <div className="mb-4">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-washi-green text-washi-green rounded-lg font-medium text-sm hover:bg-washi-green hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+            aria-label="Google マップで開く"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span>Google マップで見る</span>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </a>
+        </div>
+      )}
+
+      {/* Heard from & Season */}
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <span
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+          aria-label={`情報源: ${heardFromType}`}
+        >
+          <span className="text-base">{getHeardFromIcon(heardFromType)}</span>
+          <span>{heardFrom}から</span>
         </span>
+        {season && (
+          <span
+            className="inline-flex items-center gap-1 px-3 py-1 bg-washi-beige text-washi-green rounded-full text-xs font-medium"
+            aria-label={`季節: ${season}`}
+          >
+            <span className="text-base">{getSeasonEmoji(season)}</span>
+            <span>{season}</span>
+          </span>
+        )}
       </div>
 
       {/* Note content */}

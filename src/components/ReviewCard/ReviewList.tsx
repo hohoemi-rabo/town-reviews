@@ -155,6 +155,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
               key={review.id}
               id={review.id}
               spotName={review.places?.name || '不明なスポット'}
+              googleMapsUrl={review.places?.google_maps_url || null}
               heardFrom={review.heard_from}
               heardFromType={review.heard_from_type}
               note={review.note_formatted || review.note_raw || ''}

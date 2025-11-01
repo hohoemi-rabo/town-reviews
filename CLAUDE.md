@@ -120,7 +120,7 @@ This project uses Supabase for backend operations:
 - `recommendations` - User reviews with source attribution and review categories
   - Key fields: `heard_from`, `heard_from_type`, `note_raw`, `note_formatted`, `review_category`, `images`, `tags`, `season`
   - `review_category`: 'グルメ', '景色', '体験', '癒し', 'その他' (with CHECK constraint)
-  - `tags`: User-selected tags (27 options, max 3), array field - AI generation in Phase 2 as enhancement
+  - `tags`: User-selected tags (27 options, max 7), array field - AI generation in Phase 2 as enhancement
   - `season`: User-selected season ('春', '夏', '秋', '冬', or null), optional - AI extraction in Phase 2 as enhancement
   - `is_editable_until`: 24-hour edit window timestamp
   - `author_ip_hash`: SHA-256 hashed IP (never store raw IPs)
@@ -160,6 +160,10 @@ This project uses Supabase for backend operations:
 - `/api/reactions` - POST/DELETE: Manage reactions with optimistic updates
   - POST: Add reaction (duplicate check via `user_identifier`)
   - DELETE: Remove reaction
+- `/api/recommendations/editable-list` - **GET**: Performance-optimized endpoint for edit permission checking
+  - Returns array of all editable post IDs in single request
+  - Prevents N+1 query problem when displaying multiple cards
+  - Used by `useEditPermission` hook with global caching
 - `/api/admin/auth` - POST/DELETE: Admin authentication (login/logout with session management)
 - `/api/admin/recommendations/[id]` - GET/PATCH/DELETE: Admin-only recommendation operations (uses service role key)
 - `/api/admin/recommendations/bulk-delete` - POST: Bulk delete recommendations (admin only)
@@ -220,7 +224,7 @@ This project uses Supabase for backend operations:
 - **Review categories**: Manual selection from グルメ, 景色, 体験, 癒し, その他
   - Category badges displayed on review cards with color coding
 - **Season selection**: Optional manual selection (春, 夏, 秋, 冬) with visual emoji buttons
-- **Tag selection**: 27 predefined tags across 6 categories, max 3 per post
+- **Tag selection**: 27 predefined tags across 6 categories, max 7 per post (displays first 5 + "+N" badge on cards)
   - 雰囲気・特徴 (7): 絶景, 穴場, 人気, 静か, 賑やか, レトロ, SNS映え
   - 誰と行く (6): 家族向け, 子連れOK, デート向き, 一人でも楽しめる, 友人と, 団体OK
   - 価格帯 (3): リーズナブル, 高級, 無料
@@ -269,8 +273,8 @@ This project uses Supabase for backend operations:
 - `PostModal/ImageUpload.tsx` - Drag & drop image upload with compression and preview
 - `PostModal/SourceSelector.tsx` - Information source selection (6 presets + other)
 - `PostModal/CategorySelector.tsx` - Review category selection (5 categories with emoji icons)
-- `PostModal/SeasonSelector.tsx` - **New**: Season selection with emoji buttons (optional)
-- `PostModal/TagSelector.tsx` - **New**: Tag selection with category accordion (27 tags, max 3)
+- `PostModal/SeasonSelector.tsx` - Season selection with emoji buttons (optional)
+- `PostModal/TagSelector.tsx` - Tag selection with category accordion (27 tags, max 7, displays 5 + "+N")
 - `Filter/*` - Filter components for recommendation filtering
   - `FilterPanel.tsx` - Desktop sidebar filter panel
   - `FilterBottomSheet.tsx` - Mobile bottom sheet filter
@@ -285,7 +289,8 @@ This project uses Supabase for backend operations:
   - `ApproveFacilityModal.tsx` - Modal for approving facility requests with manual data entry
   - `RejectFacilityModal.tsx` - Modal for rejecting facility requests with reason
   - `EditFacilityModal.tsx` - Modal for editing facility information
-- `Reaction/ReactionButtons.tsx` - Reaction buttons with optimistic updates and Realtime sync
+- `Reaction/ReactionButtons.tsx` - Reaction buttons with optimistic updates and Realtime sync (currently commented out in ReviewCard)
+- `ReviewCard/ReviewTags.tsx` - Tag display component (shows max 5 tags + "+N" badge for remainder)
 
 ### Utilities
 - `lib/google-maps.ts` - Map initialization, link parsing (supports shortened URLs), default settings
@@ -334,10 +339,15 @@ This project uses Supabase for backend operations:
 - `hooks/useUserId.ts` - Generate and persist anonymous user UUID in LocalStorage
 - `hooks/useReactions.ts` - Fetch reaction counts and subscribe to Realtime updates
   - Exports `incrementCount` and `decrementCount` for optimistic updates
-- `hooks/useFilter.ts` - **New**: Filter state management with URL synchronization
+- `hooks/useFilter.ts` - Filter state management with URL synchronization
   - Manages facility_id, tags, season, heardFromTypes, categories, search
   - Provides updateFilters, clearFilters, activeFilterCount
-- `hooks/useDebounce.ts` - **New**: Generic debounce hook (500ms default)
+- `hooks/useDebounce.ts` - Generic debounce hook (500ms default)
+- `hooks/useEditPermission.ts` - **Performance-optimized**: Check edit permissions with global caching
+  - Uses singleton pattern to prevent N+1 queries (1 API call instead of N calls)
+  - Module-level cache shared across all component instances
+  - Fetches all editable IDs in single request via `/api/recommendations/editable-list`
+  - Exports `addEditableId` and `removeEditableId` for cache updates
 
 ### Important Patterns
 - Main page (`app/page.tsx`) has map/list toggle view with real-time database fetching
@@ -621,12 +631,15 @@ When implementing these tickets, always check the "備考" (Remarks) section for
 - ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, image optimization
 - ✅ **Ticket 005**: Post modal with facility search, source selector, category selector, image upload
   - **Enhanced**: Added season selection (春, 夏, 秋, 冬) with emoji buttons
-  - **Enhanced**: Added tag selection (27 predefined tags across 6 categories, max 3 per post)
+  - **Enhanced**: Added tag selection (27 predefined tags across 6 categories, max 7 per post)
+  - **Enhanced**: Tag display on cards shows first 5 tags + "+N" badge for remainder
   - Review category feature (manual selection) integrated
   - Database: `review_category`, `season`, `tags` columns with data validation
-  - UI: CategorySelector, SeasonSelector, TagSelector components
+  - UI: CategorySelector, SeasonSelector, TagSelector, ReviewTags components
+  - **Note**: "その他" input field temporarily commented out (may be re-enabled)
 - ✅ **Ticket 006**: Image optimization with WebP conversion, blur placeholders, deletion API
 - ✅ **Ticket 007**: Reaction feature (👍 行ってみたい button) with optimistic updates and Realtime sync
+  - **Note**: Currently commented out in ReviewCard.tsx (may be re-enabled based on user feedback)
 - ✅ **Ticket 008**: Search & filter (category, tags, season, heard_from_types, keyword search)
   - Desktop: FilterPanel sidebar with all filter options
   - Mobile: FilterBottomSheet with responsive design
@@ -644,10 +657,11 @@ When implementing these tickets, always check the "備考" (Remarks) section for
     - Post list with pagination (20 items/page)
     - Search functionality for post content, facility name, author name
     - Bulk selection and deletion
-    - Individual edit and delete operations
-    - EditRecommendationModal with all fields editable (reuses SeasonSelector, TagSelector)
+    - Individual edit and delete operations with 12-hour edit window
+    - EditRecommendationModal with all fields editable (reuses SeasonSelector, TagSelector with max 7 tags)
     - Badge display for category, season, and tags
-    - **Critical Fix**: Admin operations use service role key to bypass RLS
+    - **Critical Fix**: Admin operations use service role key to bypass RLS after Cookie authentication
+    - **Critical Fix**: Optimistic updates for smooth UX without page reload
   - **Phase 3**: Facility Management ✅
     - Facility addition request management (list, approve, reject)
     - Status filters (all, pending, approved, rejected)
@@ -982,3 +996,134 @@ type Facility = Tables<'places'> & { name_kana?: string | null }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { data } = await (supabase as any).from('audit_logs').select('*')
 ```
+
+11. **Admin Operations and RLS Bypass**
+   - Problem: Edit/delete operations fail due to RLS policies blocking anonymous users
+   - **Root Cause**: Using regular `createClient()` which respects RLS policies
+   - Solution: Use `createAdminClient()` in admin API routes after Cookie authentication
+
+   **Pattern:**
+   ```typescript
+   // In /api/admin/recommendations/[id]/route.ts (PATCH and DELETE)
+
+   // 1. Verify Cookie authentication first
+   const cookieStore = await cookies()
+   const editablePosts = cookieStore.get('editable_posts')?.value
+
+   if (!editablePosts) {
+     return NextResponse.json({ error: '編集権限がありません' }, { status: 403 })
+   }
+
+   // 2. Check edit window expiration
+   const now = new Date()
+   const until = new Date(post.until)
+   if (now > until) {
+     return NextResponse.json({ error: '編集期限（12時間）を過ぎています' }, { status: 403 })
+   }
+
+   // 3. Use admin client to bypass RLS AFTER authentication
+   const supabase = createAdminClient()
+   const { data, error } = await supabase
+     .from('recommendations')
+     .update({ ... })
+     .eq('id', id)
+   ```
+
+   **Important**: Only use `createAdminClient()` in server-side API routes, never expose to client
+
+12. **Optimistic Updates and Skip Flags**
+   - Problem: New posts don't appear immediately, or disappear after useEffect refetch
+   - **Root Cause**: useEffect refetches and overwrites optimistic updates
+   - Solution: Use skip flag pattern to prevent useEffect after optimistic update
+
+   **Pattern:**
+   ```typescript
+   // In HomeClient.tsx or ReviewList.tsx
+   const [skipNextFetch, setSkipNextFetch] = useState(false)
+
+   useEffect(() => {
+     // Skip this fetch if we just added/updated data optimistically
+     if (skipNextFetch) {
+       setSkipNextFetch(false)
+       setLoading(false)
+       return
+     }
+
+     // Normal fetch logic...
+   }, [dependencies, skipNextFetch])
+
+   const handlePostSuccess = (newRecommendation) => {
+     // 1. Update state immediately (optimistic)
+     setReviews((prev) => [newRecommendation, ...prev])
+
+     // 2. Skip next useEffect to prevent overwrite
+     setSkipNextFetch(true)
+   }
+   ```
+
+13. **Commented Out Features for Future Use**
+   - Some features are temporarily commented out but may be re-enabled later
+   - **ReactionButtons**: Commented out in ReviewCard.tsx (lines 14, 73-76)
+   - **"その他" input field**: Commented out in SourceSelector.tsx (lines 54-64)
+   - **"その他" validation**: Commented out in PostModal.tsx, route.ts files
+   - Pattern: Use `/* TODO: Uncomment when ready */` for easy future activation
+
+   **Example:**
+   ```typescript
+   // import ReactionButtons from '../Reaction/ReactionButtons' // TODO: Uncomment when ready
+
+   {/* TODO: Uncomment when ready to use reaction feature */}
+   {/* <ReactionButtons recommendationId={id} /> */}
+   ```
+
+14. **Edit Window Duration**
+   - Current: 12 hours (reduced from original 24 hours)
+   - Set in: `/api/recommendations/route.ts` line 203
+   ```typescript
+   const isEditableUntil = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
+   ```
+   - Also check in: `/api/recommendations/[id]/route.ts` for edit window validation
+   - Cookie expiration: Also 12 hours (`maxAge: 60 * 60 * 12`)
+
+15. **N+1 Query Prevention with Global Caching**
+   - Problem: Each review card making individual API calls to check edit permissions
+   - **Root Cause**: Multiple component instances calling same API independently
+   - Solution: Singleton pattern with module-level cache in `useEditPermission.ts`
+
+   **Pattern:**
+   ```typescript
+   // Module-level cache (shared across all component instances)
+   let cachedEditableIds: string[] = []
+   let hasInitialized = false
+   let cacheFetchPromise: Promise<string[]> | null = null
+
+   async function fetchEditableIds(): Promise<string[]> {
+     // Return cached data if already fetched
+     if (hasInitialized) {
+       return cachedEditableIds
+     }
+
+     // Return existing promise if fetch in progress
+     if (cacheFetchPromise) {
+       return cacheFetchPromise
+     }
+
+     // Single fetch for all components
+     cacheFetchPromise = fetch('/api/recommendations/editable-list')
+       .then(res => res.json())
+       .then(data => {
+         cachedEditableIds = data.editableIds || []
+         hasInitialized = true
+         cacheFetchPromise = null
+         return cachedEditableIds
+       })
+
+     return cacheFetchPromise
+   }
+   ```
+
+   **Benefits:**
+   - 100 cards = 1 API request (instead of 100 requests)
+   - Prevents API flooding in server logs
+   - Shared cache across all component instances
+   - Automatic deduplication of concurrent requests

@@ -272,7 +272,7 @@ export default function EditRecommendationModal({
                 <TagSelector
                   selectedTags={formData.tags}
                   onChange={(tags) => setFormData({ ...formData, tags })}
-                  maxTags={3}
+                  maxTags={7}
                 />
 
                 {/* Author */}
