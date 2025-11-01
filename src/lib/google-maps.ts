@@ -10,12 +10,21 @@ export const DEFAULT_CENTER = {
 
 export const DEFAULT_ZOOM = 12
 
-// Category colors for map pins
+// Category colors for map pins (facility categories)
 export const CATEGORY_COLORS = {
   飲食: '#FF8C00', // Orange
   体験: '#4169E1', // Blue
   自然: '#228B22', // Green
   温泉: '#8B4513', // Brown
+} as const
+
+// Review category colors for map markers
+export const REVIEW_CATEGORY_COLORS = {
+  'グルメ': '#FF8C00', // Orange (オレンジ)
+  '景色': '#4CAF50', // Green (緑)
+  '体験': '#2196F3', // Blue (青)
+  '癒し': '#9C27B0', // Purple (紫)
+  'その他': '#757575', // Gray (グレー)
 } as const
 
 // Keep track of the loading promise to prevent multiple script loads

@@ -15,10 +15,18 @@ export default function HomeClient() {
   const [showFilterPanel, setShowFilterPanel] = useState(false) // デスクトップ用
   const [reviews, setReviews] = useState<ExtendedRecommendation[]>([])
   const [loading, setLoading] = useState(true)
+  const [skipNextFetch, setSkipNextFetch] = useState(false)
   const { filters, activeFilterCount } = useFilter()
 
   // Fetch reviews from database (with filters)
   useEffect(() => {
+    // Skip fetch if we just added a new post
+    if (skipNextFetch) {
+      setSkipNextFetch(false)
+      setLoading(false)
+      return
+    }
+
     const fetchReviews = async () => {
       setLoading(true)
 
@@ -59,32 +67,14 @@ export default function HomeClient() {
     filters.heardFromTypes?.join(','),
     filters.categories?.join(','),
     filters.search,
+    skipNextFetch,
   ])
 
-  const handlePostSuccess = async () => {
-    // Refresh reviews after new post (using API with current filters)
-    const params = new URLSearchParams()
-    if (filters.facilityId) params.set('facility_id', filters.facilityId)
-    if (filters.tags && filters.tags.length > 0)
-      params.set('tags', filters.tags.join(','))
-    if (filters.season) params.set('season', filters.season)
-    if (filters.heardFromTypes && filters.heardFromTypes.length > 0)
-      params.set('heard_from_types', filters.heardFromTypes.join(','))
-    if (filters.categories && filters.categories.length > 0)
-      params.set('categories', filters.categories.join(','))
-    if (filters.search) params.set('search', filters.search)
-
-    try {
-      const response = await fetch(`/api/recommendations?${params.toString()}`)
-      const data = await response.json()
-
-      if (data.success) {
-        setReviews(data.recommendations as ExtendedRecommendation[])
-      }
-    } catch (error) {
-      console.error('Failed to refresh reviews:', error)
-    }
-
+  const handlePostSuccess = (newRecommendation: ExtendedRecommendation) => {
+    // Add new recommendation to the top of the list immediately
+    setReviews((prev) => [newRecommendation, ...prev])
+    // Skip next useEffect fetch to prevent overwriting
+    setSkipNextFetch(true)
     alert('投稿が完了しました！')
   }
 
@@ -150,15 +140,9 @@ export default function HomeClient() {
           <div className="flex-1 w-full relative overflow-hidden">
             <Map
               className="w-full h-full"
-              places={reviews
-                .map((r) => r.places)
-                .filter((p): p is NonNullable<typeof p> => p !== null)
-                .map((p) => ({
-                  ...p,
-                  created_at: p.created_at ?? new Date().toISOString()
-                }))}
-              onMarkerClick={(place) => {
-                console.log('Marker clicked:', place)
+              recommendations={reviews}
+              onMarkerClick={(recommendation) => {
+                console.log('Marker clicked:', recommendation)
               }}
             />
           </div>

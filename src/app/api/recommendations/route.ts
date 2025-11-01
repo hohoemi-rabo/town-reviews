@@ -138,12 +138,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (heardFromType === 'その他' && !heardFrom.trim()) {
-      return NextResponse.json(
-        { error: '情報源の詳細を入力してください' },
-        { status: 400 }
-      )
-    }
+    // TODO: Uncomment if you want to require input for "その他"
+    // if (heardFromType === 'その他' && !heardFrom.trim()) {
+    //   return NextResponse.json(
+    //     { error: '情報源の詳細を入力してください' },
+    //     { status: 400 }
+    //   )
+    // }
 
     if (!note.trim() || note.length > 200) {
       return NextResponse.json(
@@ -230,7 +231,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Insert recommendation
-    const isEditableUntil = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+    const isEditableUntil = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours from now
 
     const { data: recommendation, error: recommendationError } = await supabase
       .from('recommendations')
@@ -249,7 +250,19 @@ export async function POST(request: NextRequest) {
         images: images,
         is_editable_until: isEditableUntil.toISOString(),
       })
-      .select()
+      .select(`
+        *,
+        places:place_id (
+          id,
+          place_id,
+          name,
+          lat,
+          lng,
+          category,
+          address,
+          created_at
+        )
+      `)
       .single()
 
     if (recommendationError) {
@@ -272,7 +285,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: 60 * 60 * 12, // 12 hours
     })
 
     return NextResponse.json({

@@ -8,11 +8,16 @@ import FacilitySearchInput, { type Facility } from './FacilitySearchInput'
 import FacilityRequestModal from './FacilityRequestModal'
 import SeasonSelector from './SeasonSelector'
 import TagSelector from './TagSelector'
+import type { Tables } from '@/types/database.types'
+
+type ExtendedRecommendation = Tables<'recommendations'> & {
+  places: Tables<'places'> | null
+}
 
 interface PostModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmitSuccess?: () => void
+  onSubmitSuccess?: (newRecommendation: ExtendedRecommendation) => void
 }
 
 interface PlaceData {
@@ -77,10 +82,11 @@ export default function PostModal({
       return
     }
 
-    if (heardFromType === 'その他' && !heardFrom.trim()) {
-      setError('情報源の詳細を入力してください')
-      return
-    }
+    // TODO: Uncomment if you want to require input for "その他"
+    // if (heardFromType === 'その他' && !heardFrom.trim()) {
+    //   setError('情報源の詳細を入力してください')
+    //   return
+    // }
 
     if (!note.trim()) {
       setError('メモを入力してください')
@@ -148,9 +154,26 @@ export default function PostModal({
         throw new Error(data.error || '投稿に失敗しました')
       }
 
-      // Success
-      handleClose()
-      onSubmitSuccess?.()
+      // Success - pass new recommendation data to parent BEFORE closing
+      if (data.success && data.recommendation) {
+        // Transform places from array to single object (Supabase JOIN returns array)
+        const transformedRecommendation = {
+          ...data.recommendation,
+          places: Array.isArray(data.recommendation.places)
+            ? data.recommendation.places[0] || null
+            : data.recommendation.places,
+        }
+
+        // Call parent callback first
+        if (onSubmitSuccess) {
+          onSubmitSuccess(transformedRecommendation)
+        }
+
+        // Then close modal
+        handleClose()
+      } else {
+        handleClose()
+      }
     } catch (err) {
       console.error('Submit error:', err)
       setError(err instanceof Error ? err.message : '投稿に失敗しました')

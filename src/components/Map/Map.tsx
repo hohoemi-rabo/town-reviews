@@ -6,22 +6,26 @@ import {
   GOOGLE_MAPS_API_KEY,
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
-  CATEGORY_COLORS,
+  REVIEW_CATEGORY_COLORS,
   loadGoogleMapsScript,
 } from '@/lib/google-maps'
 import { defaultMapOptions } from '@/styles/map-styles'
-import type { Place } from '@/types'
+import type { Tables } from '@/types/database.types'
+
+type Recommendation = Tables<'recommendations'> & {
+  places: Tables<'places'> | null
+}
 
 interface MapProps {
-  places?: Place[]
-  onMarkerClick?: (place: Place) => void
+  recommendations?: Recommendation[]
+  onMarkerClick?: (recommendation: Recommendation) => void
   className?: string
   center?: { lat: number; lng: number }
   zoom?: number
 }
 
 export default function Map({
-  places = [],
+  recommendations = [],
   onMarkerClick,
   className = '',
   center = DEFAULT_CENTER,
@@ -137,7 +141,7 @@ export default function Map({
     }
   }, [isLoaded, center, zoom])
 
-  // Update markers when places change
+  // Update markers when recommendations change
   useEffect(() => {
     if (!mapInstanceRef.current || !isLoaded) return
 
@@ -148,33 +152,39 @@ export default function Map({
     markersRef.current.forEach((marker) => marker.setMap(null))
     markersRef.current = []
 
-    // Create new markers (square/memo style)
-    const newMarkers = places.map((place) => {
-      const marker = new google.maps.Marker({
-        position: { lat: place.lat, lng: place.lng },
-        map: mapInstanceRef.current!,
-        title: place.name,
-        icon: {
-          // Square path: M(move to) -size,-size L(line to) size,-size L size,size L -size,size Z(close)
-          path: 'M -12,-12 L 12,-12 L 12,12 L -12,12 Z',
-          fillColor: place.category ? CATEGORY_COLORS[place.category as keyof typeof CATEGORY_COLORS] : '#FF8C00',
-          fillOpacity: 0.95,
-          strokeColor: '#333333',
-          strokeWeight: 3,
-          scale: 1,
-          anchor: new google.maps.Point(0, 0),
-        },
-      })
+    // Create new markers (square/memo style) - one marker per recommendation
+    const newMarkers = recommendations
+      .filter((rec) => rec.places) // Only show recommendations with valid places
+      .map((recommendation) => {
+        const place = recommendation.places!
+        const reviewCategory = recommendation.review_category || 'その他'
+        const markerColor = REVIEW_CATEGORY_COLORS[reviewCategory as keyof typeof REVIEW_CATEGORY_COLORS] || REVIEW_CATEGORY_COLORS['その他']
 
-      // Add click listener
-      if (onMarkerClick) {
-        marker.addListener('click', () => {
-          onMarkerClick(place)
+        const marker = new google.maps.Marker({
+          position: { lat: place.lat, lng: place.lng },
+          map: mapInstanceRef.current!,
+          title: place.name,
+          icon: {
+            // Square path: M(move to) -size,-size L(line to) size,-size L size,size L -size,size Z(close)
+            path: 'M -12,-12 L 12,-12 L 12,12 L -12,12 Z',
+            fillColor: markerColor,
+            fillOpacity: 0.95,
+            strokeColor: '#333333',
+            strokeWeight: 3,
+            scale: 1,
+            anchor: new google.maps.Point(0, 0),
+          },
         })
-      }
 
-      return marker
-    })
+        // Add click listener
+        if (onMarkerClick) {
+          marker.addListener('click', () => {
+            onMarkerClick(recommendation)
+          })
+        }
+
+        return marker
+      })
 
     markersRef.current = newMarkers
 
@@ -185,7 +195,7 @@ export default function Map({
         markers: newMarkers,
       })
     }
-  }, [places, isLoaded, onMarkerClick])
+  }, [recommendations, isLoaded, onMarkerClick])
 
   // Cleanup on unmount
   useEffect(() => {

@@ -106,7 +106,7 @@ export function getReviewCategoryEmoji(category: string): string {
   return emojiMap[category] || '📝'
 }
 
-// Get review category color
+// Get review category color (for badges)
 export function getReviewCategoryColor(category: string): string {
   const colorMap: Record<string, string> = {
     'グルメ': 'bg-orange-100 text-orange-700 border-orange-200',
@@ -117,4 +117,17 @@ export function getReviewCategoryColor(category: string): string {
   }
 
   return colorMap[category] || 'bg-gray-100 text-gray-700 border-gray-200'
+}
+
+// Get review category background color (for cards)
+export function getReviewCategoryBgColor(category: string): string {
+  const bgColorMap: Record<string, string> = {
+    'グルメ': 'bg-orange-50',
+    '景色': 'bg-green-50',
+    '体験': 'bg-blue-50',
+    '癒し': 'bg-purple-50',
+    'その他': 'bg-gray-50',
+  }
+
+  return bgColorMap[category] || 'bg-gray-50'
 }

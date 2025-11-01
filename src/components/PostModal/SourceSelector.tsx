@@ -51,7 +51,8 @@ export default function SourceSelector({
         ))}
       </div>
 
-      {heardFromType === 'その他' && (
+      {/* TODO: Uncomment if you want input field for "その他" */}
+      {/* {heardFromType === 'その他' && (
         <input
           type="text"
           value={heardFrom}
@@ -60,7 +61,7 @@ export default function SourceSelector({
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green"
           maxLength={50}
         />
-      )}
+      )} */}
 
       {heardFromType !== 'その他' && heardFromType && (
         <input
