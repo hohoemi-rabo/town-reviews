@@ -16,7 +16,8 @@
     "clear-places": "tsx scripts/clear-places.ts",
     "find-duplicates": "tsx scripts/find-duplicates.ts",
     "remove-duplicates": "tsx scripts/remove-duplicates.ts",
-    "remove-duplicates:exec": "tsx scripts/remove-duplicates.ts --execute"
+    "remove-duplicates:exec": "tsx scripts/remove-duplicates.ts --execute",
+    "update-google-urls": "tsx scripts/update-google-urls.ts"
   },
   "dependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",

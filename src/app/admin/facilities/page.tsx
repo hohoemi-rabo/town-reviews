@@ -298,13 +298,20 @@ export default function FacilitiesPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               キーワード検索
             </label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="施設名、住所で検索..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="施設名、住所で検索..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green"
+              />
+              {loading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-5 w-5 border-2 border-washi-green border-t-transparent rounded-full"></div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Area Filter */}

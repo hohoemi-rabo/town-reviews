@@ -45,6 +45,7 @@ npm run generate-kana               # Generate hiragana readings for all facilit
 npm run find-duplicates             # Detect duplicate facilities (by location/name)
 npm run remove-duplicates           # Dry-run: Preview duplicate removal plan
 npm run remove-duplicates:exec      # Execute duplicate removal (with 5s countdown)
+npm run update-google-urls          # Auto-fetch google_maps_url for facilities (uses Google Places API)
 npm run clear-places                # Clear all facility data (use with caution)
 ```
 
@@ -330,6 +331,12 @@ This project uses Supabase for backend operations:
   - Keeps newest record (by `created_at`), deletes older duplicates
   - Rate limiting: 50ms delay between deletions
   - 5-second countdown before execution with Ctrl+C abort
+- `scripts/update-google-urls.ts` - **New**: Auto-fetch google_maps_url using Google Places API
+  - Targets facilities with null google_maps_url
+  - Uses name + address to search via Find Place from Text API
+  - Fetches Place Details API for google_maps_url
+  - Progress tracking and resume capability
+  - Rate limiting: 100ms delay between API calls
 - `scripts/count-places.ts` - Display facility statistics (total, by area, by registration source)
 - `scripts/clear-places.ts` - Clear all facility data (requires confirmation)
 - `scripts/delete-place.ts` - Delete specific facility by ID or Place ID

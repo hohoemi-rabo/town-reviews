@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           place_id: place_id || null,
           google_maps_url: google_maps_url || null,
           phone: phone || null,
-          is_verified: is_verified === 'true',
+          is_verified: ['true', 'TRUE', 'True', '1'].includes(is_verified.trim()),
           created_by,
         })
       } catch (error) {
