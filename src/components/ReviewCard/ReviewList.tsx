@@ -28,6 +28,13 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
   const observerTarget = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
 
+  // Update internal state when parent passes new data (e.g., manual refresh)
+  useEffect(() => {
+    setReviews(initialReviews)
+    setPage(1)
+    setHasMore(true)
+  }, [initialReviews])
+
   const loadMore = useCallback(async () => {
     if (!onLoadMore) return
 
