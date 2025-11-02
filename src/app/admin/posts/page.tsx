@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Tables } from '@/types/database.types'
+import { useToast } from '@/components/Toast/ToastProvider'
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal'
 import EditRecommendationModal from '@/components/Admin/EditRecommendationModal'
 
 type Recommendation = Tables<'recommendations'> & {
@@ -15,7 +17,10 @@ export default function AdminPostsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
   const itemsPerPage = 20
+  const { showToast } = useToast()
 
   useEffect(() => {
     fetchRecommendations()
@@ -54,31 +59,43 @@ export default function AdminPostsPage() {
     setSelectedIds(newSet)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('この投稿を削除しますか？')) return
+  const handleDelete = (id: string) => {
+    const rec = recommendations.find((r) => r.id === id)
+    if (rec) {
+      setDeleteConfirm({
+        id,
+        name: rec.places?.name || '不明なスポット',
+      })
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return
 
     try {
-      const response = await fetch(`/api/admin/recommendations/${id}`, {
+      const response = await fetch(`/api/admin/recommendations/${deleteConfirm.id}`, {
         method: 'DELETE',
       })
       const data = await response.json()
 
       if (data.success) {
-        alert('投稿を削除しました')
+        showToast('投稿を削除しました', 'success')
         fetchRecommendations()
       } else {
-        alert(data.error || '削除に失敗しました')
+        showToast(data.error || '削除に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to delete:', error)
-      alert('削除に失敗しました')
+      showToast('削除に失敗しました', 'error')
     }
   }
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.size === 0) return
-    if (!confirm(`選択した${selectedIds.size}件の投稿を削除しますか？`)) return
+    setBulkDeleteConfirm(true)
+  }
 
+  const confirmBulkDelete = async () => {
     try {
       const response = await fetch('/api/admin/recommendations/bulk-delete', {
         method: 'POST',
@@ -90,15 +107,15 @@ export default function AdminPostsPage() {
       const data = await response.json()
 
       if (data.success) {
-        alert(`${data.deletedCount}件の投稿を削除しました`)
+        showToast(`${data.deletedCount}件の投稿を削除しました`, 'success')
         setSelectedIds(new Set())
         fetchRecommendations()
       } else {
-        alert(data.error || '一括削除に失敗しました')
+        showToast(data.error || '一括削除に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to bulk delete:', error)
-      alert('一括削除に失敗しました')
+      showToast('一括削除に失敗しました', 'error')
     }
   }
 
@@ -312,6 +329,30 @@ export default function AdminPostsPage() {
         recommendationId={editingId}
         onClose={() => setEditingId(null)}
         onSuccess={fetchRecommendations}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+        title="投稿を削除"
+        message={`「${deleteConfirm?.name}」の口コミを削除してもよろしいですか？この操作は取り消せません。`}
+        confirmText="削除する"
+        cancelText="キャンセル"
+        type="danger"
+      />
+
+      {/* Bulk Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title="一括削除"
+        message={`選択した${selectedIds.size}件の投稿を削除してもよろしいですか？この操作は取り消せません。`}
+        confirmText="削除する"
+        cancelText="キャンセル"
+        type="danger"
       />
 
       {/* Pagination */}

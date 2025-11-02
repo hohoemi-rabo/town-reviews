@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useToast } from '@/components/Toast/ToastProvider'
 
 interface AuditLog {
   id: string
@@ -18,6 +19,7 @@ export default function AuditLogsPage() {
   const [total, setTotal] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 50
+  const { showToast } = useToast()
 
   useEffect(() => {
     fetchLogs()
@@ -36,11 +38,11 @@ export default function AuditLogsPage() {
         setLogs(data.logs)
         setTotal(data.total)
       } else {
-        alert(data.error || '監査ログの取得に失敗しました')
+        showToast(data.error || '監査ログの取得に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to fetch audit logs:', error)
-      alert('監査ログの取得に失敗しました')
+      showToast('監査ログの取得に失敗しました', 'error')
     } finally {
       setLoading(false)
     }

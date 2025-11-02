@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useToast } from '@/components/Toast/ToastProvider'
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal'
 import ReviewCard from './ReviewCard'
 import SkeletonCard from './SkeletonCard'
 import EditModal from './EditModal'
@@ -22,7 +24,9 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [editingReview, setEditingReview] = useState<ExtendedRecommendation | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
   const observerTarget = useRef<HTMLDivElement>(null)
+  const { showToast } = useToast()
 
   const loadMore = useCallback(async () => {
     if (!onLoadMore) return
@@ -52,13 +56,21 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
     }
   }, [reviews])
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('この投稿を削除してもよろしいですか？')) {
-      return
+  const handleDelete = useCallback((id: string) => {
+    const review = reviews.find((r) => r.id === id)
+    if (review) {
+      setDeleteConfirm({
+        id,
+        name: review.places?.name || '不明なスポット',
+      })
     }
+  }, [reviews])
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm) return
 
     try {
-      const response = await fetch(`/api/recommendations/${id}`, {
+      const response = await fetch(`/api/recommendations/${deleteConfirm.id}`, {
         method: 'DELETE',
       })
 
@@ -68,15 +80,15 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
       }
 
       // Remove from local state
-      setReviews((prev) => prev.filter((r) => r.id !== id))
+      setReviews((prev) => prev.filter((r) => r.id !== deleteConfirm.id))
       // Refresh tag list after deletion
       onTagsChanged?.()
-      alert('投稿を削除しました')
+      showToast('投稿を削除しました', 'success')
     } catch (error) {
       console.error('Delete error:', error)
-      alert(error instanceof Error ? error.message : '削除に失敗しました')
+      showToast(error instanceof Error ? error.message : '削除に失敗しました', 'error')
     }
-  }, [onTagsChanged])
+  }, [deleteConfirm, onTagsChanged, showToast])
 
   const handleEditSuccess = useCallback((updatedData: {
     heardFromType: string
@@ -216,6 +228,18 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
           onSuccess={handleEditSuccess}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+        title="投稿を削除"
+        message={`「${deleteConfirm?.name}」の口コミを削除してもよろしいですか？この操作は取り消せません。`}
+        confirmText="削除する"
+        cancelText="キャンセル"
+        type="danger"
+      />
     </>
   )
 }

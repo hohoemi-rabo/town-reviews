@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Tables } from '@/types/database.types'
+import { useToast } from '@/components/Toast/ToastProvider'
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal'
 import EditFacilityModal from '@/components/Admin/EditFacilityModal'
 
 type Facility = Tables<'places'> & { name_kana?: string | null }
@@ -16,7 +18,10 @@ export default function FacilitiesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null)
   const [importing, setImporting] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
+  const [importConfirm, setImportConfirm] = useState<{ file: File } | null>(null)
   const itemsPerPage = 20
+  const { showToast } = useToast()
 
   // Debounce search query to avoid excessive API calls
   useEffect(() => {
@@ -48,36 +53,38 @@ export default function FacilitiesPage() {
         setFacilities(data.facilities as Facility[])
         setCurrentPage(1) // Reset to first page on filter change
       } else {
-        alert(data.error || '施設の取得に失敗しました')
+        showToast(data.error || '施設の取得に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to fetch facilities:', error)
-      alert('施設の取得に失敗しました')
+      showToast('施設の取得に失敗しました', 'error')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`施設「${name}」を削除しますか？\n（is_verified = false になります）`)) {
-      return
-    }
+  const handleDelete = (id: string, name: string) => {
+    setDeleteConfirm({ id, name })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return
 
     try {
-      const response = await fetch(`/api/admin/facilities/${id}`, {
+      const response = await fetch(`/api/admin/facilities/${deleteConfirm.id}`, {
         method: 'DELETE',
       })
       const data = await response.json()
 
       if (data.success) {
-        alert('施設を削除しました')
+        showToast('施設を削除しました', 'success')
         fetchFacilities()
       } else {
-        alert(data.error || '削除に失敗しました')
+        showToast(data.error || '削除に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to delete facility:', error)
-      alert('削除に失敗しました')
+      showToast('削除に失敗しました', 'error')
     }
   }
 
@@ -88,28 +95,33 @@ export default function FacilitiesPage() {
       const allFacilities = await fetchAllFacilities()
       const csv = generateCSV(allFacilities)
       downloadCSV(csv, 'facilities.csv')
-      alert(`${allFacilities.length}件の施設データをCSV出力しました`)
+      showToast(`${allFacilities.length}件の施設データをCSV出力しました`, 'success')
     } catch (error) {
       console.error('CSV export failed:', error)
-      alert('CSV出力に失敗しました')
+      showToast('CSV出力に失敗しました', 'error')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     // Validate file type
     if (!file.name.endsWith('.csv')) {
-      alert('CSVファイルを選択してください')
+      showToast('CSVファイルを選択してください', 'error')
+      event.target.value = '' // Reset input
       return
     }
 
-    if (!confirm(`CSVファイル「${file.name}」をインポートしますか？\n既存の施設は更新され、新しい施設は追加されます。`)) {
-      return
-    }
+    setImportConfirm({ file })
+    event.target.value = '' // Reset input for next import
+  }
+
+  const confirmImport = async () => {
+    if (!importConfirm) return
+    const { file } = importConfirm
 
     setImporting(true)
     try {
@@ -124,37 +136,40 @@ export default function FacilitiesPage() {
       const data = await response.json()
 
       if (data.success) {
-        let message = data.message
+        showToast(data.message, 'success')
 
-        // Add details if available
+        // Show warnings if there were any errors
         if (data.parseErrors || data.dbErrors) {
-          message += '\n\n⚠️ 以下のエラーがありました:'
+          let warningMessage = '⚠️ 一部のレコードでエラーがありました:'
           if (data.parseErrors) {
-            message += '\n\nパースエラー:\n' + data.parseErrors.slice(0, 5).join('\n')
+            warningMessage += '\n\nパースエラー:\n' + data.parseErrors.slice(0, 5).join('\n')
             if (data.parseErrors.length > 5) {
-              message += `\n...他${data.parseErrors.length - 5}件`
+              warningMessage += `\n...他${data.parseErrors.length - 5}件`
             }
           }
           if (data.dbErrors) {
-            message += '\n\nデータベースエラー:\n' + data.dbErrors.slice(0, 5).join('\n')
+            warningMessage += '\n\nデータベースエラー:\n' + data.dbErrors.slice(0, 5).join('\n')
             if (data.dbErrors.length > 5) {
-              message += `\n...他${data.dbErrors.length - 5}件`
+              warningMessage += `\n...他${data.dbErrors.length - 5}件`
             }
           }
+          // Log full details to console for debugging
+          console.warn('CSV Import warnings:', { parseErrors: data.parseErrors, dbErrors: data.dbErrors })
+          showToast(warningMessage, 'info')
         }
 
-        alert(message)
         fetchFacilities() // Refresh the list
       } else {
-        alert(`インポート失敗: ${data.error}\n\n${data.details || ''}`)
+        showToast(`インポート失敗: ${data.error}`, 'error')
+        if (data.details) {
+          console.error('Import details:', data.details)
+        }
       }
     } catch (error) {
       console.error('Import failed:', error)
-      alert('インポートに失敗しました')
+      showToast('インポートに失敗しました', 'error')
     } finally {
       setImporting(false)
-      // Reset file input
-      event.target.value = ''
     }
   }
 
@@ -482,6 +497,30 @@ export default function FacilitiesPage() {
           }}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+        title="施設を削除"
+        message={`施設「${deleteConfirm?.name}」を削除しますか？\n（is_verified = false になります）`}
+        confirmText="削除する"
+        cancelText="キャンセル"
+        type="danger"
+      />
+
+      {/* Import Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!importConfirm}
+        onClose={() => setImportConfirm(null)}
+        onConfirm={confirmImport}
+        title="CSVインポート"
+        message={`CSVファイル「${importConfirm?.file.name}」をインポートしますか？\n既存の施設は更新され、新しい施設は追加されます。`}
+        confirmText="インポートする"
+        cancelText="キャンセル"
+        type="warning"
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (

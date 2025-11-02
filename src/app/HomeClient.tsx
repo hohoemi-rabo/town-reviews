@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useFilter } from '@/hooks/useFilter'
 import { addEditableId } from '@/hooks/useEditPermission'
+import { useToast } from '@/components/Toast/ToastProvider'
 import Map from '@/components/Map/Map'
 import ReviewList, { type ExtendedRecommendation } from '@/components/ReviewCard/ReviewList'
 import PostModal from '@/components/PostModal/PostModal'
@@ -19,6 +20,7 @@ export default function HomeClient() {
   const [skipNextFetch, setSkipNextFetch] = useState(false)
   const [tagRefreshTrigger, setTagRefreshTrigger] = useState(0)
   const { filters, activeFilterCount } = useFilter()
+  const { showToast } = useToast()
 
   // Fetch reviews from database (with filters)
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function HomeClient() {
     setTagRefreshTrigger((prev) => prev + 1)
     // Skip next useEffect fetch to prevent overwriting
     setSkipNextFetch(true)
-    alert('投稿が完了しました！')
+    showToast('投稿が完了しました！', 'success')
   }
 
   return (

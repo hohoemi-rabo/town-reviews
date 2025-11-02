@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useToast } from '@/components/Toast/ToastProvider'
 import {
   BarChart,
   Bar,
@@ -52,6 +53,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function AdminStatsPage() {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { showToast } = useToast()
 
   useEffect(() => {
     fetchStats()
@@ -65,11 +67,11 @@ export default function AdminStatsPage() {
       if (data.success) {
         setStats(data.stats)
       } else {
-        alert(data.error || '統計データの取得に失敗しました')
+        showToast(data.error || '統計データの取得に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error)
-      alert('統計データの取得に失敗しました')
+      showToast('統計データの取得に失敗しました', 'error')
     } finally {
       setLoading(false)
     }

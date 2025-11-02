@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useToast } from '@/components/Toast/ToastProvider'
 
 export default function AdminLayout({
   children,
@@ -12,6 +13,7 @@ export default function AdminLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
+  const { showToast } = useToast()
 
   // ログインページはレイアウトを適用しない
   if (pathname === '/admin/login') {
@@ -35,7 +37,7 @@ export default function AdminLayout({
       router.push('/admin/login')
     } catch (error) {
       console.error('Logout error:', error)
-      alert('ログアウトに失敗しました')
+      showToast('ログアウトに失敗しました', 'error')
       setLoggingOut(false)
     }
   }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Tables } from '@/types/database.types'
+import { useToast } from '@/components/Toast/ToastProvider'
 import ApproveFacilityModal from '@/components/Admin/ApproveFacilityModal'
 import RejectFacilityModal from '@/components/Admin/RejectFacilityModal'
 
@@ -15,6 +16,7 @@ export default function FacilityRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending')
   const [approvingRequest, setApprovingRequest] = useState<FacilityRequest | null>(null)
   const [rejectingRequest, setRejectingRequest] = useState<FacilityRequest | null>(null)
+  const { showToast } = useToast()
 
   useEffect(() => {
     fetchRequests()
@@ -38,11 +40,11 @@ export default function FacilityRequestsPage() {
         setRequests(data.requests as FacilityRequest[])
       } else {
         console.error('Failed to fetch requests:', data.error)
-        alert(data.error || 'リクエストの取得に失敗しました')
+        showToast(data.error || 'リクエストの取得に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to fetch requests:', error)
-      alert('リクエストの取得に失敗しました')
+      showToast('リクエストの取得に失敗しました', 'error')
     } finally {
       setLoading(false)
     }

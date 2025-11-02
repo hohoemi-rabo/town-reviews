@@ -3,6 +3,7 @@ import { Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
+import { ToastProvider } from "@/components/Toast/ToastProvider";
 
 const zenMaruGothic = Zen_Maru_Gothic({
   weight: ['400', '500', '700'],
@@ -29,9 +30,11 @@ export default function RootLayout({
       <body
         className={`${zenMaruGothic.variable} font-sans antialiased flex flex-col min-h-screen`}
       >
-        {children}
-        <Footer />
-        <CookieBanner />
+        <ToastProvider>
+          {children}
+          <Footer />
+          <CookieBanner />
+        </ToastProvider>
       </body>
     </html>
   );

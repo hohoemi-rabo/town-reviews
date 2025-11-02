@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Tables } from '@/types/database.types'
+import { useToast } from '@/components/Toast/ToastProvider'
 import SeasonSelector from '@/components/PostModal/SeasonSelector'
 import TagSelector from '@/components/PostModal/TagSelector'
 
@@ -48,6 +49,7 @@ export default function EditRecommendationModal({
     author_name: '',
     is_anonymous: false,
   })
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (isOpen && recommendationId) {
@@ -80,7 +82,7 @@ export default function EditRecommendationModal({
       }
     } catch (error) {
       console.error('Failed to fetch recommendation:', error)
-      alert('投稿の取得に失敗しました')
+      showToast('投稿の取得に失敗しました', 'error')
     } finally {
       setLoading(false)
     }
@@ -102,15 +104,15 @@ export default function EditRecommendationModal({
       const data = await response.json()
 
       if (data.success) {
-        alert('投稿を更新しました')
+        showToast('投稿を更新しました', 'success')
         onSuccess()
         onClose()
       } else {
-        alert(data.error || '更新に失敗しました')
+        showToast(data.error || '更新に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to update:', error)
-      alert('更新に失敗しました')
+      showToast('更新に失敗しました', 'error')
     } finally {
       setSaving(false)
     }

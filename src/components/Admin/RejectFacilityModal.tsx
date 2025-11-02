@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Tables } from '@/types/database.types'
+import { useToast } from '@/components/Toast/ToastProvider'
 
 type FacilityRequest = Tables<'facility_requests'>
 
@@ -20,12 +21,13 @@ export default function RejectFacilityModal({
 }: RejectFacilityModalProps) {
   const [saving, setSaving] = useState(false)
   const [adminNote, setAdminNote] = useState('')
+  const { showToast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!adminNote.trim()) {
-      alert('却下理由を入力してください')
+      showToast('却下理由を入力してください', 'error')
       return
     }
 
@@ -45,14 +47,15 @@ export default function RejectFacilityModal({
       const data = await response.json()
 
       if (data.success) {
-        alert('リクエストを却下しました')
+        showToast('リクエストを却下しました', 'success')
         onSuccess()
+        onClose()
       } else {
-        alert(data.error || '却下に失敗しました')
+        showToast(data.error || '却下に失敗しました', 'error')
       }
     } catch (error) {
       console.error('Failed to reject request:', error)
-      alert('却下に失敗しました')
+      showToast('却下に失敗しました', 'error')
     } finally {
       setSaving(false)
     }
