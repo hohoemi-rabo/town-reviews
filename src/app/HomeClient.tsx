@@ -17,49 +17,68 @@ export default function HomeClient() {
   const [showFilterPanel, setShowFilterPanel] = useState(false) // デスクトップ用
   const [reviews, setReviews] = useState<ExtendedRecommendation[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [skipNextFetch, setSkipNextFetch] = useState(false)
   const [tagRefreshTrigger, setTagRefreshTrigger] = useState(0)
   const { filters, activeFilterCount } = useFilter()
   const { showToast } = useToast()
 
-  // Fetch reviews from database (with filters)
+  // Fetch reviews function (can be called manually or by useEffect)
+  const fetchReviews = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true)
+    } else {
+      setLoading(true)
+    }
+
+    // Build query parameters
+    const params = new URLSearchParams()
+    if (filters.facilityId) params.set('facility_id', filters.facilityId)
+    if (filters.tags && filters.tags.length > 0)
+      params.set('tags', filters.tags.join(','))
+    if (filters.season) params.set('season', filters.season)
+    if (filters.heardFromTypes && filters.heardFromTypes.length > 0)
+      params.set('heard_from_types', filters.heardFromTypes.join(','))
+    if (filters.categories && filters.categories.length > 0)
+      params.set('categories', filters.categories.join(','))
+    if (filters.search) params.set('search', filters.search)
+
+    try {
+      const response = await fetch(`/api/recommendations?${params.toString()}`)
+      const data = await response.json()
+
+      if (data.success) {
+        setReviews(data.recommendations as ExtendedRecommendation[])
+        if (isManualRefresh) {
+          showToast('最新の投稿を読み込みました', 'success')
+        }
+      } else {
+        console.error('Failed to fetch reviews:', data.error)
+        if (isManualRefresh) {
+          showToast('更新に失敗しました', 'error')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error)
+      if (isManualRefresh) {
+        showToast('更新に失敗しました', 'error')
+      }
+    } finally {
+      if (isManualRefresh) {
+        setRefreshing(false)
+      } else {
+        setLoading(false)
+      }
+    }
+  }
+
+  // Auto-fetch reviews when filters change
   useEffect(() => {
     // Skip fetch if we just added a new post
     if (skipNextFetch) {
       setSkipNextFetch(false)
       setLoading(false)
       return
-    }
-
-    const fetchReviews = async () => {
-      setLoading(true)
-
-      // Build query parameters
-      const params = new URLSearchParams()
-      if (filters.facilityId) params.set('facility_id', filters.facilityId)
-      if (filters.tags && filters.tags.length > 0)
-        params.set('tags', filters.tags.join(','))
-      if (filters.season) params.set('season', filters.season)
-      if (filters.heardFromTypes && filters.heardFromTypes.length > 0)
-        params.set('heard_from_types', filters.heardFromTypes.join(','))
-      if (filters.categories && filters.categories.length > 0)
-        params.set('categories', filters.categories.join(','))
-      if (filters.search) params.set('search', filters.search)
-
-      try {
-        const response = await fetch(`/api/recommendations?${params.toString()}`)
-        const data = await response.json()
-
-        if (data.success) {
-          setReviews(data.recommendations as ExtendedRecommendation[])
-        } else {
-          console.error('Failed to fetch reviews:', data.error)
-        }
-      } catch (error) {
-        console.error('Failed to fetch reviews:', error)
-      } finally {
-        setLoading(false)
-      }
     }
 
     fetchReviews()
@@ -73,6 +92,12 @@ export default function HomeClient() {
     filters.search,
     skipNextFetch,
   ])
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    fetchReviews(true)
+    setTagRefreshTrigger((prev) => prev + 1)
+  }
 
   const handlePostSuccess = (newRecommendation: ExtendedRecommendation) => {
     // Add new recommendation to the top of the list immediately
@@ -124,6 +149,17 @@ export default function HomeClient() {
                     {activeFilterCount}
                   </span>
                 )}
+              </button>
+
+              {/* Refresh Button */}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="他の人の投稿をチェック"
+              >
+                <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+                <span className="hidden sm:inline">{refreshing ? '更新中...' : '更新'}</span>
               </button>
 
               <button
