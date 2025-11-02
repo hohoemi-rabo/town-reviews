@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useFilter } from '@/hooks/useFilter'
+import { addEditableId } from '@/hooks/useEditPermission'
 import Map from '@/components/Map/Map'
 import ReviewList, { type ExtendedRecommendation } from '@/components/ReviewCard/ReviewList'
 import PostModal from '@/components/PostModal/PostModal'
@@ -16,6 +17,7 @@ export default function HomeClient() {
   const [reviews, setReviews] = useState<ExtendedRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [skipNextFetch, setSkipNextFetch] = useState(false)
+  const [tagRefreshTrigger, setTagRefreshTrigger] = useState(0)
   const { filters, activeFilterCount } = useFilter()
 
   // Fetch reviews from database (with filters)
@@ -73,6 +75,10 @@ export default function HomeClient() {
   const handlePostSuccess = (newRecommendation: ExtendedRecommendation) => {
     // Add new recommendation to the top of the list immediately
     setReviews((prev) => [newRecommendation, ...prev])
+    // Add to editable cache so edit/delete buttons appear immediately
+    addEditableId(newRecommendation.id)
+    // Refresh tag list in filter
+    setTagRefreshTrigger((prev) => prev + 1)
     // Skip next useEffect fetch to prevent overwriting
     setSkipNextFetch(true)
     alert('投稿が完了しました！')
@@ -83,7 +89,7 @@ export default function HomeClient() {
       {/* Desktop Filter Panel */}
       {showFilterPanel && (
         <aside className="hidden lg:block w-80 flex-shrink-0">
-          <FilterPanel onClose={() => setShowFilterPanel(false)} />
+          <FilterPanel onClose={() => setShowFilterPanel(false)} refreshTrigger={tagRefreshTrigger} />
         </aside>
       )}
 
@@ -98,6 +104,9 @@ export default function HomeClient() {
               {/* Filter Button */}
               <button
                 onClick={() => {
+                  // Refresh tag list when opening filter
+                  setTagRefreshTrigger((prev) => prev + 1)
+
                   if (window.innerWidth >= 1024) {
                     setShowFilterPanel(!showFilterPanel)
                   } else {
@@ -148,7 +157,10 @@ export default function HomeClient() {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-            <ReviewList initialReviews={reviews} />
+            <ReviewList
+              initialReviews={reviews}
+              onTagsChanged={() => setTagRefreshTrigger((prev) => prev + 1)}
+            />
           </div>
         )}
       </div>
@@ -157,6 +169,7 @@ export default function HomeClient() {
       <FilterBottomSheet
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
+        refreshTrigger={tagRefreshTrigger}
       />
 
       {/* Post Modal */}

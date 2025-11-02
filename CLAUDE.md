@@ -225,13 +225,13 @@ This project uses Supabase for backend operations:
 - **Review categories**: Manual selection from グルメ, 景色, 体験, 癒し, その他
   - Category badges displayed on review cards with color coding
 - **Season selection**: Optional manual selection (春, 夏, 秋, 冬) with visual emoji buttons
-- **Tag selection**: 27 predefined tags across 6 categories, max 7 per post (displays first 5 + "+N" badge on cards)
+- **Tag selection**: 26 predefined tags across 5 categories, max 7 per post (displays first 5 + "+N" badge on cards)
+  - 料理ジャンル (6): 和食, 洋食・イタリアン, 中華, カフェ・スイーツ, ラーメン・麺類, 焼肉・居酒屋
   - 雰囲気・特徴 (7): 絶景, 穴場, 人気, 静か, 賑やか, レトロ, SNS映え
   - 誰と行く (6): 家族向け, 子連れOK, デート向き, 一人でも楽しめる, 友人と, 団体OK
-  - 価格帯 (3): リーズナブル, 高級, 無料
   - アクセス・設備 (4): 駅近, 車必須, 駐車場あり, バリアフリー
   - 時間帯 (3): 朝がおすすめ, 昼がおすすめ, 夜がおすすめ
-  - 地域性・その他 (4): 地元民おすすめ, 観光客向け, 歴史的, 自然豊か
+  - **Note**: 価格帯、地域性・その他カテゴリーは現在コメントアウト（将来的に追加検討）
 - **Search & Filter**: Multiple filter options (category, season, tags, heard_from_types, keyword search)
 - **Admin Panel**: Password-protected admin interface for comprehensive data management
   - Authentication with session cookies
@@ -275,7 +275,7 @@ This project uses Supabase for backend operations:
 - `PostModal/SourceSelector.tsx` - Information source selection (6 presets + other)
 - `PostModal/CategorySelector.tsx` - Review category selection (5 categories with emoji icons)
 - `PostModal/SeasonSelector.tsx` - Season selection with emoji buttons (optional)
-- `PostModal/TagSelector.tsx` - Tag selection with category accordion (27 tags, max 7, displays 5 + "+N")
+- `PostModal/TagSelector.tsx` - Tag selection with category accordion (26 tags across 5 categories, max 7, displays 5 + "+N")
 - `Filter/*` - Filter components for recommendation filtering
   - `FilterPanel.tsx` - Desktop sidebar filter panel
   - `FilterBottomSheet.tsx` - Mobile bottom sheet filter
@@ -638,7 +638,7 @@ When implementing these tickets, always check the "備考" (Remarks) section for
 - ✅ **Ticket 004**: Review card UI with washi design, infinite scroll, image optimization
 - ✅ **Ticket 005**: Post modal with facility search, source selector, category selector, image upload
   - **Enhanced**: Added season selection (春, 夏, 秋, 冬) with emoji buttons
-  - **Enhanced**: Added tag selection (27 predefined tags across 6 categories, max 7 per post)
+  - **Enhanced**: Added tag selection (26 predefined tags across 5 categories, max 7 per post)
   - **Enhanced**: Tag display on cards shows first 5 tags + "+N" badge for remainder
   - Review category feature (manual selection) integrated
   - Database: `review_category`, `season`, `tags` columns with data validation

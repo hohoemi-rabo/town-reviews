@@ -35,7 +35,7 @@ export default function Map({
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
   const clustererRef = useRef<MarkerClusterer | null>(null)
-  const currentLocationMarkerRef = useRef<google.maps.Marker | null>(null)
+  // const currentLocationMarkerRef = useRef<google.maps.Marker | null>(null) // TODO: Uncomment when ready
 
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -70,71 +70,72 @@ export default function Map({
 
       mapInstanceRef.current = map
 
-      // Add current location button
-      const locationButton = document.createElement('button')
-      locationButton.textContent = '現在地'
-      locationButton.classList.add('custom-map-control-button')
-      locationButton.style.cssText = `
-        background-color: #fff;
-        border: 2px solid #fff;
-        border-radius: 3px;
-        box-shadow: 0 2px 6px rgba(0,0,0,.3);
-        cursor: pointer;
-        font-size: 14px;
-        margin: 10px;
-        padding: 8px 12px;
-        text-align: center;
-      `
+      // TODO: Uncomment when ready - Current location feature
+      // // Add current location button
+      // const locationButton = document.createElement('button')
+      // locationButton.textContent = '現在地'
+      // locationButton.classList.add('custom-map-control-button')
+      // locationButton.style.cssText = `
+      //   background-color: #fff;
+      //   border: 2px solid #fff;
+      //   border-radius: 3px;
+      //   box-shadow: 0 2px 6px rgba(0,0,0,.3);
+      //   cursor: pointer;
+      //   font-size: 14px;
+      //   margin: 10px;
+      //   padding: 8px 12px;
+      //   text-align: center;
+      // `
 
-      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locationButton)
+      // map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locationButton)
 
-      locationButton.addEventListener('click', () => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const pos = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              }
+      // locationButton.addEventListener('click', () => {
+      //   if (navigator.geolocation) {
+      //     navigator.geolocation.getCurrentPosition(
+      //       (position) => {
+      //         const pos = {
+      //           lat: position.coords.latitude,
+      //           lng: position.coords.longitude,
+      //         }
 
-              // Remove existing current location marker
-              if (currentLocationMarkerRef.current) {
-                currentLocationMarkerRef.current.setMap(null)
-              }
+      //         // Remove existing current location marker
+      //         if (currentLocationMarkerRef.current) {
+      //           currentLocationMarkerRef.current.setMap(null)
+      //         }
 
-              // Create new current location marker
-              const currentMarker = new google.maps.Marker({
-                position: pos,
-                map: map,
-                title: '現在地',
-                icon: {
-                  path: google.maps.SymbolPath.CIRCLE,
-                  fillColor: '#4285F4',
-                  fillOpacity: 1,
-                  strokeColor: '#ffffff',
-                  strokeWeight: 3,
-                  scale: 10,
-                },
-                zIndex: 1000,
-              })
+      //         // Create new current location marker
+      //         const currentMarker = new google.maps.Marker({
+      //           position: pos,
+      //           map: map,
+      //           title: '現在地',
+      //           icon: {
+      //             path: google.maps.SymbolPath.CIRCLE,
+      //             fillColor: '#4285F4',
+      //             fillOpacity: 1,
+      //             strokeColor: '#ffffff',
+      //             strokeWeight: 3,
+      //             scale: 10,
+      //           },
+      //           zIndex: 1000,
+      //         })
 
-              currentLocationMarkerRef.current = currentMarker
-              map.setCenter(pos)
-              map.setZoom(15)
-            },
-            () => {
-              alert('現在地を取得できませんでした')
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            }
-          )
-        } else {
-          alert('お使いのブラウザは位置情報に対応していません')
-        }
-      })
+      //         currentLocationMarkerRef.current = currentMarker
+      //         map.setCenter(pos)
+      //         map.setZoom(15)
+      //       },
+      //       () => {
+      //         alert('現在地を取得できませんでした')
+      //       },
+      //       {
+      //         enableHighAccuracy: true,
+      //         timeout: 10000,
+      //         maximumAge: 0,
+      //       }
+      //     )
+      //   } else {
+      //     alert('お使いのブラウザは位置情報に対応していません')
+      //   }
+      // })
     } catch (err) {
       console.error('Failed to initialize map:', err)
       setError('地図の初期化に失敗しました')
@@ -204,9 +205,10 @@ export default function Map({
         clustererRef.current.clearMarkers()
       }
       markersRef.current.forEach((marker) => marker.setMap(null))
-      if (currentLocationMarkerRef.current) {
-        currentLocationMarkerRef.current.setMap(null)
-      }
+      // TODO: Uncomment when ready - Current location cleanup
+      // if (currentLocationMarkerRef.current) {
+      //   currentLocationMarkerRef.current.setMap(null)
+      // }
     }
   }, [])
 

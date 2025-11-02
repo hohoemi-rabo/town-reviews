@@ -12,6 +12,7 @@ import CategoryFilter from './CategoryFilter'
 interface FilterBottomSheetProps {
   isOpen: boolean
   onClose: () => void
+  refreshTrigger?: number
 }
 
 /**
@@ -20,6 +21,7 @@ interface FilterBottomSheetProps {
 export default function FilterBottomSheet({
   isOpen,
   onClose,
+  refreshTrigger,
 }: FilterBottomSheetProps) {
   const { filters, updateFilters, clearFilters, activeFilterCount } =
     useFilter()
@@ -106,6 +108,7 @@ export default function FilterBottomSheet({
           <TagFilter
             selectedTags={filters.tags || []}
             onChange={(tags) => updateFilters({ tags })}
+            refreshTrigger={refreshTrigger}
           />
 
           {/* Season Filter */}

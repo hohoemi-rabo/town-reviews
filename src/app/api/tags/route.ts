@@ -51,8 +51,8 @@ export async function GET() {
       },
       {
         headers: {
-          // 5分間キャッシュ
-          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+          // リアルタイム更新のためキャッシュ無効化
+          'Cache-Control': 'no-store, must-revalidate',
         },
       }
     )

@@ -10,12 +10,13 @@ import CategoryFilter from './CategoryFilter'
 
 interface FilterPanelProps {
   onClose?: () => void
+  refreshTrigger?: number
 }
 
 /**
  * フィルタパネルコンポーネント（デスクトップ用サイドバー）
  */
-export default function FilterPanel({ onClose }: FilterPanelProps) {
+export default function FilterPanel({ onClose, refreshTrigger }: FilterPanelProps) {
   const { filters, updateFilters, clearFilters, activeFilterCount } =
     useFilter()
 
@@ -57,6 +58,7 @@ export default function FilterPanel({ onClose }: FilterPanelProps) {
         <TagFilter
           selectedTags={filters.tags || []}
           onChange={(tags) => updateFilters({ tags })}
+          refreshTrigger={refreshTrigger}
         />
 
         {/* Season Filter */}

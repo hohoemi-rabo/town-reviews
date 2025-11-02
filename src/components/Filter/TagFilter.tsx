@@ -5,13 +5,14 @@ import { useState, useEffect } from 'react'
 interface TagFilterProps {
   selectedTags: string[]
   onChange: (tags: string[]) => void
+  refreshTrigger?: number // Optional trigger to refresh tag list
 }
 
 /**
  * タグフィルタコンポーネント
  * よく使われるタグを表示し、複数選択可能（OR条件）
  */
-export default function TagFilter({ selectedTags, onChange }: TagFilterProps) {
+export default function TagFilter({ selectedTags, onChange, refreshTrigger }: TagFilterProps) {
   const [availableTags, setAvailableTags] = useState<
     { name: string; count: number }[]
   >([])
@@ -20,6 +21,7 @@ export default function TagFilter({ selectedTags, onChange }: TagFilterProps) {
   // タグ一覧を取得
   useEffect(() => {
     const fetchTags = async () => {
+      setLoading(true)
       try {
         const response = await fetch('/api/tags')
         if (response.ok) {
@@ -34,7 +36,7 @@ export default function TagFilter({ selectedTags, onChange }: TagFilterProps) {
     }
 
     fetchTags()
-  }, [])
+  }, [refreshTrigger])
 
   const handleToggle = (tag: string) => {
     if (selectedTags.includes(tag)) {

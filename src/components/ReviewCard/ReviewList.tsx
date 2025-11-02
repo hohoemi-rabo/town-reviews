@@ -13,9 +13,10 @@ export type ExtendedRecommendation = Tables<'recommendations'> & {
 interface ReviewListProps {
   initialReviews?: ExtendedRecommendation[]
   onLoadMore?: (page: number) => Promise<ExtendedRecommendation[]>
+  onTagsChanged?: () => void
 }
 
-export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewListProps) {
+export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChanged }: ReviewListProps) {
   const [reviews, setReviews] = useState<ExtendedRecommendation[]>(initialReviews)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -68,12 +69,14 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
 
       // Remove from local state
       setReviews((prev) => prev.filter((r) => r.id !== id))
+      // Refresh tag list after deletion
+      onTagsChanged?.()
       alert('投稿を削除しました')
     } catch (error) {
       console.error('Delete error:', error)
       alert(error instanceof Error ? error.message : '削除に失敗しました')
     }
-  }, [])
+  }, [onTagsChanged])
 
   const handleEditSuccess = useCallback((updatedData: {
     heardFromType: string
@@ -109,9 +112,12 @@ export default function ReviewList({ initialReviews = [], onLoadMore }: ReviewLi
       )
     )
 
+    // Refresh tag list if tags changed
+    onTagsChanged?.()
+
     // Close the edit modal
     setEditingReview(null)
-  }, [editingReview])
+  }, [editingReview, onTagsChanged])
 
   useEffect(() => {
     const currentTarget = observerTarget.current
