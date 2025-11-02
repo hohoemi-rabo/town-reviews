@@ -220,7 +220,7 @@ This project uses Supabase for backend operations:
    - Server: sharp (resize to 1200px, convert to WebP at 80% quality)
 
 ### Key Features
-- **No authentication required** for posting (cookie-based edit window: 24h)
+- **No authentication required** for posting (cookie-based edit window: 12h)
 - **Source attribution**: Who told you about this place (家族, 友人, 近所の人, etc.)
 - **Review categories**: Manual selection from グルメ, 景色, 体験, 癒し, その他
   - Category badges displayed on review cards with color coding
@@ -233,6 +233,9 @@ This project uses Supabase for backend operations:
   - 時間帯 (3): 朝がおすすめ, 昼がおすすめ, 夜がおすすめ
   - **Note**: 価格帯、地域性・その他カテゴリーは現在コメントアウト（将来的に追加検討）
 - **Search & Filter**: Multiple filter options (category, season, tags, heard_from_types, keyword search)
+- **Manual Refresh**: 🔄 Button to fetch latest posts from other users (no real-time updates)
+- **Toast Notifications**: Custom toast system for success/error/info messages (replaces alert())
+- **Confirmation Modals**: Custom modal dialogs for dangerous operations (replaces confirm())
 - **Admin Panel**: Password-protected admin interface for comprehensive data management
   - Authentication with session cookies
   - Post editing/deletion (bypasses RLS with service role key)
@@ -265,9 +268,17 @@ This project uses Supabase for backend operations:
 ## Key Components and Utilities
 
 ### Components
-- `Map/Map.tsx` - Google Maps with clustering, current location marker, category-colored pins
+- `Map/Map.tsx` - Google Maps with clustering, category-colored pins
   - **Important**: Uses singleton pattern for script loading to prevent duplicate API loads
+  - **Note**: Current location feature is commented out (lines 38, 73-138, 208-211)
 - `ReviewCard/*` - Card UI with optimized images, tags, reactions, source attribution, infinite scroll
+- `Toast/ToastProvider.tsx` - Global toast notification system with auto-dismiss (3s)
+  - Three types: success (green), error (red), info (blue)
+  - Slide-in animation from right, click to dismiss
+  - Usage: `const { showToast } = useToast(); showToast('Message', 'success')`
+- `ConfirmModal/ConfirmModal.tsx` - Reusable confirmation modal for dangerous actions
+  - Three types: danger (red), warning (orange), info (green)
+  - Used for delete confirmations, bulk operations, CSV imports
 - `PostModal/PostModal.tsx` - 2-step post creation (facility search → form) **Updated in Ticket 016**
 - `PostModal/FacilitySearchInput.tsx` - Facility search with real-time suggestions, keyboard navigation
 - `PostModal/FacilityRequestModal.tsx` - Facility addition request form with email notification
@@ -1134,3 +1145,127 @@ const { data } = await (supabase as any).from('audit_logs').select('*')
    - Prevents API flooding in server logs
    - Shared cache across all component instances
    - Automatic deduplication of concurrent requests
+
+16. **Parent-Child State Synchronization with Key Prop**
+   - Problem: Child component with internal state doesn't update when parent passes new props
+   - **Root Cause**: React doesn't re-render when prop reference changes if component is already mounted
+   - Solution: Use `key` prop to force component remount when data changes
+
+   **Pattern:**
+   ```typescript
+   // Parent component (HomeClient.tsx)
+   <ReviewList
+     key={reviews.length > 0 ? reviews[0]?.id : 'empty'}  // Force remount on data change
+     initialReviews={reviews}
+     onTagsChanged={() => setTagRefreshTrigger((prev) => prev + 1)}
+   />
+
+   // Child component (ReviewList.tsx)
+   export default function ReviewList({ initialReviews = [] }: ReviewListProps) {
+     const [reviews, setReviews] = useState<ExtendedRecommendation[]>(initialReviews)
+
+     // Update internal state when parent passes new data
+     useEffect(() => {
+       setReviews(initialReviews)
+       setPage(1)
+       setHasMore(true)
+     }, [initialReviews])
+   }
+   ```
+
+   **When to use:**
+   - Manual refresh functionality
+   - Filter changes that should reset component state
+   - Any parent state change that should force child re-initialization
+
+17. **Manual Refresh Pattern (No Real-time Updates)**
+   - Decision: Real-time updates disabled to save user data and prevent UI confusion
+   - Pattern: Manual refresh button that fetches latest data from server
+
+   **Implementation:**
+   ```typescript
+   // Parent component state
+   const [refreshing, setRefreshing] = useState(false)
+
+   // Reusable fetch function with manual refresh flag
+   const fetchReviews = async (isManualRefresh = false) => {
+     if (isManualRefresh) {
+       setRefreshing(true)
+     } else {
+       setLoading(true)
+     }
+
+     try {
+       const response = await fetch('/api/recommendations')
+       const data = await response.json()
+       setReviews(data.recommendations)
+       if (isManualRefresh) {
+         showToast('最新の投稿を読み込みました', 'success')
+       }
+     } finally {
+       if (isManualRefresh) {
+         setRefreshing(false)
+       } else {
+         setLoading(false)
+       }
+     }
+   }
+
+   // Refresh button
+   <button onClick={() => fetchReviews(true)} disabled={refreshing}>
+     <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+     {refreshing ? '更新中...' : '更新'}
+   </button>
+   ```
+
+   **Why not real-time:**
+   - Target users: 60+ age demographic, low data plans
+   - Low posting frequency: Regional app, few posts per day
+   - Better UX: Predictable interface, no sudden changes
+   - Own posts still update immediately via optimistic updates
+
+18. **Toast and Modal Replacement Pattern**
+   - All `alert()` and `confirm()` calls replaced with custom components
+   - Pattern: Use ToastProvider (global) + ConfirmModal (component-level)
+
+   **Toast Usage:**
+   ```typescript
+   import { useToast } from '@/components/Toast/ToastProvider'
+
+   const { showToast } = useToast()
+   showToast('操作が完了しました', 'success')  // Auto-dismiss after 3s
+   showToast('エラーが発生しました', 'error')
+   showToast('処理中です...', 'info')
+   ```
+
+   **Confirm Modal Usage:**
+   ```typescript
+   import ConfirmModal from '@/components/ConfirmModal/ConfirmModal'
+
+   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
+
+   // Trigger confirmation
+   const handleDelete = (id: string, name: string) => {
+     setDeleteConfirm({ id, name })
+   }
+
+   // Actual delete function
+   const confirmDelete = async () => {
+     if (!deleteConfirm) return
+     // ... perform delete
+     setDeleteConfirm(null)
+   }
+
+   // Render modal
+   <ConfirmModal
+     isOpen={!!deleteConfirm}
+     onClose={() => setDeleteConfirm(null)}
+     onConfirm={confirmDelete}
+     title="投稿を削除"
+     message={`「${deleteConfirm?.name}」を削除しますか？`}
+     confirmText="削除する"
+     type="danger"
+   />
+   ```
+
+   **Important:** Never use `alert()`, `confirm()`, or `prompt()` - always use custom components
