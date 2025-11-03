@@ -1269,3 +1269,116 @@ const { data } = await (supabase as any).from('audit_logs').select('*')
    ```
 
    **Important:** Never use `alert()`, `confirm()`, or `prompt()` - always use custom components
+
+19. **Admin Panel Long-Running Operations UI**
+   - Problem: CSV import/export and bulk operations need clear visual feedback
+   - Solution: Full-screen loading overlay with spinner and progress indicator
+
+   **Pattern:**
+   ```typescript
+   // State management
+   const [importing, setImporting] = useState(false)
+   const [exporting, setExporting] = useState(false)
+   const [deleting, setDeleting] = useState(false)
+
+   // Operation handler
+   const handleImportCSV = async (file: File) => {
+     setImporting(true)
+     try {
+       const formData = new FormData()
+       formData.append('file', file)
+       const response = await fetch('/api/admin/import-facilities', {
+         method: 'POST',
+         body: formData,
+       })
+       const data = await response.json()
+       if (data.success) {
+         showToast(data.message, 'success')
+       }
+     } finally {
+       setImporting(false)
+     }
+   }
+
+   // Loading overlay
+   {importing && (
+     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+       <div className="bg-white rounded-lg shadow-washi p-8 max-w-md w-full mx-4">
+         <div className="flex flex-col items-center">
+           <div className="animate-spin rounded-full h-16 w-16 border-4 border-washi-green border-t-transparent mb-4"></div>
+           <h3 className="text-xl font-bold text-gray-900 mb-2">CSV取込中...</h3>
+           <p className="text-center text-gray-600 mb-4">
+             施設データを処理しています。<br />
+             しばらくお待ちください。
+           </p>
+           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+             <div className="bg-washi-green h-full rounded-full animate-pulse" style={{ width: '100%' }}></div>
+           </div>
+           <p className="text-sm text-gray-500 mt-4">
+             ※ 処理中は画面を閉じないでください
+           </p>
+         </div>
+       </div>
+     </div>
+   )}
+   ```
+
+   **Color coding by operation type:**
+   - Import: Green spinner (washi-green)
+   - Export: Blue spinner (blue-500)
+   - Delete: Red spinner (red-500)
+
+20. **CSV Import/Export Data Management**
+   - CSV format must match database schema exactly (14 columns)
+   - BOM (Byte Order Mark) required for Excel Japanese character support
+   - All fields must be trimmed before validation to handle whitespace
+
+   **CSV Import Validation:**
+   ```typescript
+   // Trim all fields before processing
+   const fields = row.map(field => field.trim())
+
+   // Required fields check
+   if (!name || !area || !category) {
+     errors.push(`Row ${i + 2}: 必須フィールドが空です`)
+     continue
+   }
+   ```
+
+   **Insert vs Update logic:**
+   - If CSV has `id` column with values → UPDATE mode (requires existing records)
+   - If CSV has `id` column empty → INSERT mode (creates new records)
+   - Best practice: Export from admin panel preserves IDs for safe updates
+
+21. **Database Foreign Key Constraints (Critical)**
+   - `recommendations.place_id` → `places.id` with `ON DELETE CASCADE`
+   - **⚠️ WARNING**: Deleting a facility will DELETE ALL recommendations for that facility
+   - Safe operation: UPDATE facilities, not DELETE
+   - To remove facilities from view: Set `is_verified = false` instead of DELETE
+
+   **Safe facility data refresh pattern:**
+   ```bash
+   # 1. Export current data (preserves IDs)
+   Admin Panel → CSV出力
+
+   # 2. Edit CSV (update names, addresses, etc.)
+   # Keep existing IDs for updates, empty ID for new facilities
+
+   # 3. Import back (updates existing + inserts new)
+   Admin Panel → CSV取込
+   ```
+
+   **Dangerous operation (will delete user posts):**
+   ```sql
+   DELETE FROM places;  -- ❌ CASCADE deletes all recommendations!
+   ```
+
+   **Future improvement consideration:**
+   ```sql
+   -- Change CASCADE to SET NULL to preserve posts when facility deleted
+   ALTER TABLE recommendations
+   DROP CONSTRAINT recommendations_place_id_fkey,
+   ADD CONSTRAINT recommendations_place_id_fkey
+     FOREIGN KEY (place_id) REFERENCES places(id)
+     ON DELETE SET NULL;
+   ```

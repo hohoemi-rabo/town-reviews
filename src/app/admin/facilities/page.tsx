@@ -18,6 +18,7 @@ export default function FacilitiesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null)
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null)
   const [importConfirm, setImportConfirm] = useState<{ file: File } | null>(null)
   const itemsPerPage = 20
@@ -91,7 +92,7 @@ export default function FacilitiesPage() {
   const handleExportCSV = async () => {
     // CSV export functionality - fetch all facilities (not just current filtered view)
     try {
-      setLoading(true)
+      setExporting(true)
       const allFacilities = await fetchAllFacilities()
       const csv = generateCSV(allFacilities)
       downloadCSV(csv, 'facilities.csv')
@@ -100,7 +101,7 @@ export default function FacilitiesPage() {
       console.error('CSV export failed:', error)
       showToast('CSV出力に失敗しました', 'error')
     } finally {
-      setLoading(false)
+      setExporting(false)
     }
   }
 
@@ -291,10 +292,10 @@ export default function FacilitiesPage() {
           </label>
           <button
             onClick={handleExportCSV}
-            disabled={loading}
+            disabled={exporting}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            📥 CSV出力
+            {exporting ? '📥 出力中...' : '📥 CSV出力'}
           </button>
           <button
             onClick={fetchFacilities}
@@ -542,6 +543,62 @@ export default function FacilitiesPage() {
           >
             次へ
           </button>
+        </div>
+      )}
+
+      {/* Import Loading Overlay */}
+      {importing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-washi p-8 max-w-md w-full mx-4">
+            <div className="flex flex-col items-center">
+              {/* Spinner */}
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-washi-green border-t-transparent mb-4"></div>
+
+              {/* Message */}
+              <h3 className="text-xl font-bold text-gray-900 mb-2">CSV取込中...</h3>
+              <p className="text-center text-gray-600 mb-4">
+                施設データを処理しています。<br />
+                しばらくお待ちください。
+              </p>
+
+              {/* Progress indicator */}
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="bg-washi-green h-full rounded-full animate-pulse" style={{ width: '100%' }}></div>
+              </div>
+
+              <p className="text-sm text-gray-500 mt-4">
+                ※ 処理中は画面を閉じないでください
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Loading Overlay */}
+      {exporting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-washi p-8 max-w-md w-full mx-4">
+            <div className="flex flex-col items-center">
+              {/* Spinner */}
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mb-4"></div>
+
+              {/* Message */}
+              <h3 className="text-xl font-bold text-gray-900 mb-2">CSV出力中...</h3>
+              <p className="text-center text-gray-600 mb-4">
+                施設データを出力しています。<br />
+                しばらくお待ちください。
+              </p>
+
+              {/* Progress indicator */}
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="bg-blue-500 h-full rounded-full animate-pulse" style={{ width: '100%' }}></div>
+              </div>
+
+              <p className="text-sm text-gray-500 mt-4">
+                ※ 処理中は画面を閉じないでください
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

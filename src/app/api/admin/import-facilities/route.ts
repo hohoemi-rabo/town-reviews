@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
           continue
         }
 
+        // Trim all fields to remove whitespace
         const [
           id,
           name,
@@ -99,9 +100,9 @@ export async function POST(req: NextRequest) {
           is_verified,
           created_by,
           // created_at is ignored - will be set by database
-        ] = row
+        ] = row.map(field => field.trim())
 
-        // Skip empty rows
+        // Skip empty rows (check after trim)
         if (!name || !area || !category) {
           errors.push(`Row ${i + 2}: 必須フィールド（name, area, category）が空です`)
           continue

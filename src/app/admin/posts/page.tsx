@@ -13,6 +13,7 @@ type Recommendation = Tables<'recommendations'> & {
 export default function AdminPostsPage() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -96,6 +97,7 @@ export default function AdminPostsPage() {
   }
 
   const confirmBulkDelete = async () => {
+    setDeleting(true)
     try {
       const response = await fetch('/api/admin/recommendations/bulk-delete', {
         method: 'POST',
@@ -116,6 +118,8 @@ export default function AdminPostsPage() {
     } catch (error) {
       console.error('Failed to bulk delete:', error)
       showToast('一括削除に失敗しました', 'error')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -375,6 +379,34 @@ export default function AdminPostsPage() {
           >
             次へ
           </button>
+        </div>
+      )}
+
+      {/* Bulk Delete Loading Overlay */}
+      {deleting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-washi p-8 max-w-md w-full mx-4">
+            <div className="flex flex-col items-center">
+              {/* Spinner */}
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-500 border-t-transparent mb-4"></div>
+
+              {/* Message */}
+              <h3 className="text-xl font-bold text-gray-900 mb-2">投稿を削除中...</h3>
+              <p className="text-center text-gray-600 mb-4">
+                選択した投稿を削除しています。<br />
+                しばらくお待ちください。
+              </p>
+
+              {/* Progress indicator */}
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="bg-red-500 h-full rounded-full animate-pulse" style={{ width: '100%' }}></div>
+              </div>
+
+              <p className="text-sm text-gray-500 mt-4">
+                ※ 処理中は画面を閉じないでください
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
