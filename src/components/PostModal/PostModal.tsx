@@ -309,7 +309,7 @@ export default function PostModal({
                 <TagSelector
                   selectedTags={tags}
                   onChange={setTags}
-                  maxTags={7}
+                  maxTags={3}
                 />
 
                 {/* Author info */}
