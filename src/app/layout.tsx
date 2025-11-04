@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body
-        className={`${zenMaruGothic.variable} font-sans antialiased flex flex-col min-h-screen`}
+        className={`${zenMaruGothic.variable} font-sans antialiased flex flex-col h-screen overflow-hidden`}
       >
         <ToastProvider>
           {children}

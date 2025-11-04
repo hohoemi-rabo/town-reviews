@@ -11,7 +11,7 @@ import FilterPanel from '@/components/Filter/FilterPanel'
 import FilterBottomSheet from '@/components/Filter/FilterBottomSheet'
 
 export default function HomeClient() {
-  const [showMap, setShowMap] = useState(true)
+  const [showMap, setShowMap] = useState(false)
   const [isPostModalOpen, setIsPostModalOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [showFilterPanel, setShowFilterPanel] = useState(false) // デスクトップ用
@@ -112,7 +112,7 @@ export default function HomeClient() {
   }
 
   return (
-    <main className="h-screen w-screen flex overflow-hidden">
+    <main className={`h-screen w-screen flex ${showMap ? 'overflow-hidden' : ''}`}>
       {/* Desktop Filter Panel */}
       {showFilterPanel && (
         <aside className="hidden lg:block w-80 flex-shrink-0">
@@ -121,85 +121,146 @@ export default function HomeClient() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm z-10 px-4 py-3 sm:px-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-washi-green">
-              まち口コミ帳
-            </h1>
-            <div className="flex items-center gap-2">
-              {/* Filter Button */}
-              <button
-                onClick={() => {
-                  // Refresh tag list when opening filter
-                  setTagRefreshTrigger((prev) => prev + 1)
-
-                  if (window.innerWidth >= 1024) {
-                    setShowFilterPanel(!showFilterPanel)
-                  } else {
-                    setIsFilterOpen(true)
-                  }
-                }}
-                className="relative px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2"
-              >
-                <span>🔍</span>
-                <span className="hidden sm:inline">絞り込み</span>
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-washi-orange text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Refresh Button */}
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="他の人の投稿をチェック"
-              >
-                <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
-                <span className="hidden sm:inline">{refreshing ? '更新中...' : '更新'}</span>
-              </button>
-
-              <button
-                onClick={() => setIsPostModalOpen(true)}
-                className="px-4 py-2 bg-washi-orange text-white rounded-lg hover:bg-washi-orange-light transition-colors font-bold flex items-center gap-2"
-              >
-                <span>✏️</span>
-                <span className="hidden sm:inline">口コミ投稿</span>
-              </button>
-              <button
-                onClick={() => setShowMap(!showMap)}
-                className="px-4 py-2 bg-washi-green text-white rounded-lg hover:bg-washi-green-light transition-colors"
-              >
-                {showMap ? '📋 リスト表示' : '🗺️ 地図表示'}
-              </button>
-            </div>
-          </div>
-        </header>
-
+      <div className={`flex-1 flex flex-col ${showMap ? 'overflow-hidden' : ''}`}>
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-washi-green"></div>
           </div>
         ) : showMap ? (
-          <div className="flex-1 w-full relative overflow-hidden">
-            <Map
-              className="w-full h-full"
-              recommendations={reviews}
-              onMarkerClick={(recommendation) => {
-                console.log('Marker clicked:', recommendation)
-              }}
-            />
-          </div>
+          <>
+            <header className="bg-white shadow-sm z-10 px-4 py-3 sm:px-6 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl sm:text-2xl font-bold text-washi-green">
+                  まち口コミ帳
+                </h1>
+                <div className="flex items-center gap-2">
+                  {/* Filter Button */}
+                  <button
+                    onClick={() => {
+                      // Refresh tag list when opening filter
+                      setTagRefreshTrigger((prev) => prev + 1)
+
+                      if (window.innerWidth >= 1024) {
+                        setShowFilterPanel(!showFilterPanel)
+                      } else {
+                        setIsFilterOpen(true)
+                      }
+                    }}
+                    className="relative px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2"
+                  >
+                    <span>🔍</span>
+                    <span className="hidden sm:inline">絞り込み</span>
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-washi-orange text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Refresh Button */}
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="他の人の投稿をチェック"
+                  >
+                    <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+                    <span className="hidden sm:inline">{refreshing ? '更新中...' : '更新'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsPostModalOpen(true)}
+                    className="px-4 py-2 bg-washi-orange text-white rounded-lg hover:bg-washi-orange-light transition-colors font-bold flex items-center gap-2"
+                  >
+                    <span>✏️</span>
+                    <span className="hidden sm:inline">口コミ投稿</span>
+                  </button>
+                  <button
+                    onClick={() => setShowMap(!showMap)}
+                    className="px-4 py-2 bg-washi-green text-white rounded-lg hover:bg-washi-green-light transition-colors flex items-center gap-2"
+                  >
+                    <span>{showMap ? '📋' : '🗺️'}</span>
+                    <span className="hidden sm:inline">{showMap ? 'リスト表示' : '地図表示'}</span>
+                  </button>
+                </div>
+              </div>
+            </header>
+            <div className="flex-1 w-full relative overflow-hidden">
+              <Map
+                className="w-full h-full"
+                recommendations={reviews}
+                onMarkerClick={(recommendation) => {
+                  console.log('Marker clicked:', recommendation)
+                }}
+              />
+            </div>
+          </>
         ) : (
-          <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-            <ReviewList
-              key={reviews.length > 0 ? reviews[0]?.id : 'empty'}
-              initialReviews={reviews}
-              onTagsChanged={() => setTagRefreshTrigger((prev) => prev + 1)}
-            />
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <header className="sticky top-0 bg-white shadow-sm z-10 px-4 py-3 sm:px-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl sm:text-2xl font-bold text-washi-green">
+                  まち口コミ帳
+                </h1>
+                <div className="flex items-center gap-2">
+                  {/* Filter Button */}
+                  <button
+                    onClick={() => {
+                      // Refresh tag list when opening filter
+                      setTagRefreshTrigger((prev) => prev + 1)
+
+                      if (window.innerWidth >= 1024) {
+                        setShowFilterPanel(!showFilterPanel)
+                      } else {
+                        setIsFilterOpen(true)
+                      }
+                    }}
+                    className="relative px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2"
+                  >
+                    <span>🔍</span>
+                    <span className="hidden sm:inline">絞り込み</span>
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-washi-orange text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Refresh Button */}
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="他の人の投稿をチェック"
+                  >
+                    <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+                    <span className="hidden sm:inline">{refreshing ? '更新中...' : '更新'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsPostModalOpen(true)}
+                    className="px-4 py-2 bg-washi-orange text-white rounded-lg hover:bg-washi-orange-light transition-colors font-bold flex items-center gap-2"
+                  >
+                    <span>✏️</span>
+                    <span className="hidden sm:inline">口コミ投稿</span>
+                  </button>
+                  <button
+                    onClick={() => setShowMap(!showMap)}
+                    className="px-4 py-2 bg-washi-green text-white rounded-lg hover:bg-washi-green-light transition-colors flex items-center gap-2"
+                  >
+                    <span>{showMap ? '📋' : '🗺️'}</span>
+                    <span className="hidden sm:inline">{showMap ? 'リスト表示' : '地図表示'}</span>
+                  </button>
+                </div>
+              </div>
+            </header>
+            <div className="px-4 py-6 sm:px-6 lg:px-8 pb-28">
+              <ReviewList
+                key={reviews.length > 0 ? reviews[0]?.id : 'empty'}
+                initialReviews={reviews}
+                onTagsChanged={() => setTagRefreshTrigger((prev) => prev + 1)}
+              />
+            </div>
           </div>
         )}
       </div>
