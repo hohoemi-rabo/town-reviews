@@ -145,7 +145,7 @@ export default function FacilitySearchInput({
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="absolute z-10 w-full mt-2 bg-white border-2 border-washi-beige-200 rounded-lg shadow-washi max-h-80 overflow-y-auto"
+            className="w-full mt-2 bg-white border-2 border-washi-beige-200 rounded-lg shadow-washi overflow-y-auto"
           >
             {suggestions.map((facility, index) => (
               <button
@@ -176,7 +176,7 @@ export default function FacilitySearchInput({
 
         {/* 検索結果なし */}
         {showSuggestions && !isSearching && query.trim().length >= 2 && suggestions.length === 0 && (
-          <div className="absolute z-10 w-full mt-2 bg-white border-2 border-washi-beige-200 rounded-lg shadow-washi p-4 text-center text-washi-text-light">
+          <div className="w-full mt-2 bg-white border-2 border-washi-beige-200 rounded-lg shadow-washi p-4 text-center text-washi-text-light">
             「{query}」に一致する施設が見つかりませんでした
           </div>
         )}

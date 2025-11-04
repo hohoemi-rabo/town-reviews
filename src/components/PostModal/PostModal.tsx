@@ -204,8 +204,8 @@ export default function PostModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black bg-opacity-50">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
             <h2 className="text-2xl font-bold text-washi-green">
@@ -230,16 +230,7 @@ export default function PostModal({
 
             {step === 'search' ? (
               /* Step 1: Facility search */
-              <div className="space-y-4">
-                <div className="bg-washi-beige border-2 border-washi-green-light rounded-lg p-4">
-                  <h3 className="font-bold text-washi-green mb-2">💡 新しい投稿方法</h3>
-                  <p className="text-sm text-gray-700">
-                    施設名を検索して選択するだけ！
-                    <br />
-                    Google Mapsの操作は不要になりました。
-                  </p>
-                </div>
-
+              <div>
                 <FacilitySearchInput
                   onSelectFacility={handleSelectFacility}
                   onRequestNewFacility={handleRequestNewFacility}

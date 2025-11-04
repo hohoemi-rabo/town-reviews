@@ -1382,3 +1382,51 @@ const { data } = await (supabase as any).from('audit_logs').select('*')
      FOREIGN KEY (place_id) REFERENCES places(id)
      ON DELETE SET NULL;
    ```
+
+22. **UI/UX Layout and Scroll Management**
+   - **Current Tag System**: 24 tags total (max 3 per post) after removing "駅近" and "車必須"
+   - **Header Mobile Display**: All buttons show icon-only on mobile (`hidden sm:inline` pattern)
+   - **Default View**: List view is default on app load (`useState(false)` for showMap)
+   - **Scroll Behavior**:
+     - Map view: `overflow-hidden` prevents scrolling, mouse wheel controls map zoom
+     - List view: Sticky header with scrollable content area
+   - **Footer**: Fixed to bottom (`fixed bottom-0`) with `pb-28` padding on list content
+   - **Post Modal**: Dynamic height based on facility suggestions (uses document flow, not absolute positioning)
+     - Modal size: `max-w-2xl` width, `max-h-[95vh]` height, `p-2` outer padding
+     - Facility search list grows with results, no fixed height constraint
+
+   **Critical CSS patterns:**
+   ```css
+   /* globals.css */
+   html {
+     height: 100%;
+     overflow: hidden;  /* Prevents html scroll */
+   }
+
+   /* layout.tsx */
+   body {
+     h-screen overflow-hidden  /* Fixed viewport height */
+   }
+
+   /* HomeClient.tsx - Conditional overflow */
+   <main className={`h-screen w-screen flex ${showMap ? 'overflow-hidden' : ''}`}>
+   <div className={`flex-1 flex flex-col ${showMap ? 'overflow-hidden' : ''}`}>
+
+   /* List view - Scrollable container with sticky header */
+   <div className="flex-1 overflow-y-auto min-h-0">
+     <header className="sticky top-0 ...">
+     <div className="px-4 py-6 pb-28">  /* pb-28 for footer clearance */
+
+   /* FacilitySearchInput.tsx - Document flow (NOT absolute) */
+   <div className="w-full mt-2 ...">  /* Grows modal naturally */
+   ```
+
+   **Layout hierarchy for scroll:**
+   ```
+   html (overflow: hidden)
+   └── body (h-screen overflow-hidden)
+       └── main (flex, conditional overflow-hidden)
+           ├── Map view: overflow-hidden → wheel controls zoom
+           └── List view: no overflow → child handles scroll
+               └── div (overflow-y-auto) → sticky header works here
+   ```
