@@ -13,7 +13,7 @@ export async function compressImage(
   const defaultOptions = {
     maxSizeMB: 1, // Max file size in MB
     maxWidthOrHeight: 1920, // Max width or height
-    useWebWorker: true, // Use web worker for better performance
+    useWebWorker: false, // Disabled to avoid CSP issues with external CDN
     ...options,
   }
 
