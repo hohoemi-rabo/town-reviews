@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateSession } from '../auth/route'
+import { validateAdminSession } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
@@ -30,7 +30,7 @@ type FacilityRow = {
 export async function POST(req: NextRequest) {
   try {
     // Admin authentication check
-    const isAuthenticated = await validateSession()
+    const isAuthenticated = await validateAdminSession()
     if (!isAuthenticated) {
       return NextResponse.json(
         {

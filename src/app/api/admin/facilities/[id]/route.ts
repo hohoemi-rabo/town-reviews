@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { validateSession } from '../../auth/route'
+import { validateAdminSession } from '@/lib/admin-auth'
 import { createAuditLog } from '@/lib/audit-log'
 
 type RouteContext = {
@@ -14,7 +14,7 @@ type RouteContext = {
  * GET /api/admin/facilities/[id]
  */
 export async function GET(request: NextRequest, context: RouteContext) {
-  const isAuthenticated = await validateSession()
+  const isAuthenticated = await validateAdminSession()
   if (!isAuthenticated) {
     return NextResponse.json(
       { success: false, error: '認証が必要です' },
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
  * PATCH /api/admin/facilities/[id]
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const isAuthenticated = await validateSession()
+  const isAuthenticated = await validateAdminSession()
   if (!isAuthenticated) {
     return NextResponse.json(
       { success: false, error: '認証が必要です' },
@@ -157,7 +157,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  * DELETE /api/admin/facilities/[id]
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const isAuthenticated = await validateSession()
+  const isAuthenticated = await validateAdminSession()
   if (!isAuthenticated) {
     return NextResponse.json(
       { success: false, error: '認証が必要です' },

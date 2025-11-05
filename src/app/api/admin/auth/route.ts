@@ -99,22 +99,3 @@ export async function DELETE(_request: NextRequest) {
     )
   }
 }
-
-/**
- * セッション検証用のヘルパー関数
- */
-export async function validateSession(): Promise<boolean> {
-  try {
-    const cookieStore = await cookies()
-    const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value
-
-    if (!sessionToken) {
-      return false
-    }
-
-    return activeSessions.has(sessionToken)
-  } catch (error) {
-    console.error('Session validation error:', error)
-    return false
-  }
-}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { validateSession } from '../auth/route'
+import { validateAdminSession } from '@/lib/admin-auth'
 
 /**
  * 施設一覧取得API（管理者専用）
@@ -8,7 +8,7 @@ import { validateSession } from '../auth/route'
  */
 export async function GET(request: NextRequest) {
   // 管理者認証チェック
-  const isAuthenticated = await validateSession()
+  const isAuthenticated = await validateAdminSession()
   if (!isAuthenticated) {
     return NextResponse.json(
       { success: false, error: '認証が必要です' },
