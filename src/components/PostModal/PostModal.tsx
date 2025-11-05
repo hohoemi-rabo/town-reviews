@@ -48,7 +48,7 @@ export default function PostModal({
   const [images, setImages] = useState<File[]>([])
   const [authorName, setAuthorName] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(true)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  // const [agreedToTerms, setAgreedToTerms] = useState(false) // TODO: Uncomment when ready
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -98,10 +98,11 @@ export default function PostModal({
       return
     }
 
-    if (!agreedToTerms) {
-      setError('利用規約に同意してください')
-      return
-    }
+    // TODO: Uncomment when ready to enforce terms agreement
+    // if (!agreedToTerms) {
+    //   setError('利用規約に同意してください')
+    //   return
+    // }
 
     setError(null)
     setIsSubmitting(true)
@@ -328,7 +329,8 @@ export default function PostModal({
                 </div>
 
                 {/* Terms agreement */}
-                <div className="space-y-2">
+                {/* TODO: Uncomment when ready to enforce terms agreement */}
+                {/* <div className="space-y-2">
                   <label className="flex items-start gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -357,7 +359,7 @@ export default function PostModal({
                       に同意する <span className="text-red-500">*</span>
                     </span>
                   </label>
-                </div>
+                </div> */}
 
                 {/* Submit button */}
                 <button
