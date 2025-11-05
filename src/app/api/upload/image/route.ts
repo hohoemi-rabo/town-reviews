@@ -6,6 +6,16 @@ import sharp from 'sharp'
 // Force Node.js runtime (sharp requires Node.js)
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // Maximum execution time in seconds (for image processing)
+
+// Debug: Add GET method to verify function is working
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    message: 'Image upload API is working',
+    runtime: 'nodejs'
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
