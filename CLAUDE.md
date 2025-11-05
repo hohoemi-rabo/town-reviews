@@ -604,6 +604,160 @@ npm run bulk-import:resume
 
    **Security Note**: After deployment, verify both keys in Vercel Environment Variables match the keys in Google Cloud Console
 
+11. **Turbopack Incompatibility with Native Modules (Sharp)**
+   - Problem: Image upload fails on Vercel with "Could not load the 'sharp' module using the linux-x64 runtime"
+   - **Root Cause**: Turbopack bundler doesn't properly handle native Node.js modules in production builds
+   - Solution: Remove `--turbopack` from production build script, keep it for dev
+
+   **Fix:**
+   ```json
+   // package.json
+   {
+     "scripts": {
+       "dev": "next dev --turbopack",     // Keep Turbopack for fast dev
+       "build": "next build",              // Remove --turbopack for production
+       "start": "next start"
+     }
+   }
+   ```
+
+   **Why it happens:**
+   - Turbopack is optimized for speed, not production bundling
+   - Native modules (sharp, sqlite3, etc.) require special handling
+   - Webpack (default Next.js bundler) properly bundles native modules
+
+   **API Route Configuration:**
+   ```typescript
+   // /api/upload/image/route.ts
+   export const runtime = 'nodejs'        // Force Node.js runtime
+   export const dynamic = 'force-dynamic' // Disable static optimization
+   ```
+
+12. **Web Worker CSP Violations with External CDN**
+   - Problem: browser-image-compression library loading external scripts from CDN, causing CSP violation
+   - **Root Cause**: `useWebWorker: true` causes library to load worker script from jsdelivr.net
+   - Solution: Disable Web Worker to avoid external script loading
+
+   **Fix:**
+   ```typescript
+   // /src/lib/image-compression.ts
+   const defaultOptions = {
+     maxSizeMB: 1,
+     maxWidthOrHeight: 1920,
+     useWebWorker: false,  // Changed from true - Disabled to avoid CSP issues
+     ...options,
+   }
+   ```
+
+   **CSP Configuration:**
+   ```typescript
+   // next.config.ts
+   async headers() {
+     return [{
+       source: '/:path*',
+       headers: [{
+         key: 'Content-Security-Policy',
+         value: [
+           "default-src 'self'",
+           "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com",
+           "worker-src 'self' blob:",  // Allow blob URLs for local workers
+           // ...
+         ].join('; '),
+       }],
+     }]
+   }
+   ```
+
+   **Trade-off:**
+   - Without Web Worker, image compression blocks UI thread
+   - However, with `maxSizeMB: 1` limit, processing time is acceptable (<1 second)
+   - Alternative: Host worker script locally instead of CDN
+
+13. **Next.js Route Handler Export Restrictions**
+   - Problem: Build fails with "validateSession is not a valid Route export field"
+   - **Root Cause**: Next.js route handlers only allow HTTP method exports (GET, POST, PATCH, DELETE, etc.)
+   - Solution: Move helper functions to separate utility files
+
+   **Error:**
+   ```typescript
+   // ❌ Wrong: Exporting non-HTTP method from route handler
+   // /api/admin/auth/route.ts
+   export async function validateSession() { ... }  // ERROR!
+   export async function POST() { ... }
+   ```
+
+   **Fix:**
+   ```typescript
+   // ✅ Correct: Move to utility file
+   // /src/lib/admin-auth.ts
+   export async function validateAdminSession(): Promise<boolean> {
+     const cookieStore = await cookies()
+     const sessionToken = cookieStore.get('admin_session')?.value
+     return !!sessionToken
+   }
+
+   // /api/admin/facilities/route.ts
+   import { validateAdminSession } from '@/lib/admin-auth'
+
+   export async function GET(request: NextRequest) {
+     const isAuthenticated = await validateAdminSession()
+     if (!isAuthenticated) {
+       return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+     }
+     // ...
+   }
+   ```
+
+   **Allowed exports in route handlers:**
+   - ✅ `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`
+   - ✅ `generateStaticParams`, `generateMetadata`
+   - ✅ Config exports: `runtime`, `dynamic`, `dynamicParams`, `revalidate`, etc.
+   - ❌ Custom function exports (use separate utility files)
+
+14. **Middleware Matcher Interfering with API Routes**
+   - Problem: API routes returning 405 Method Not Allowed or using wrong runtime
+   - **Root Cause**: Middleware with broad matcher pattern forces Edge Runtime on API routes
+   - Solution: Narrow middleware matcher to specific paths only
+
+   **Error Pattern:**
+   ```typescript
+   // ❌ Wrong: Broad matcher catches API routes
+   export const config = {
+     matcher: [
+       '/((?!_next/static|_next/image|favicon.ico).*)',  // Too broad!
+     ]
+   }
+   ```
+
+   **Fix:**
+   ```typescript
+   // ✅ Correct: Only match admin routes
+   // /src/middleware.ts
+   export const config = {
+     matcher: [
+       '/admin/:path*',  // Only admin routes need authentication
+     ]
+   }
+   ```
+
+   **Why it matters:**
+   - Middleware runs on Edge Runtime by default
+   - Edge Runtime doesn't support Node.js native modules (sharp, fs, etc.)
+   - API routes requiring Node.js runtime must bypass middleware
+   - `/api/upload/image` requires `sharp` → must use Node.js runtime → exclude from middleware
+
+   **Related configuration:**
+   ```typescript
+   // API route that needs Node.js runtime
+   export const runtime = 'nodejs'  // Explicitly set runtime
+   export const dynamic = 'force-dynamic'
+
+   // Middleware exclusion pattern
+   if (pathname.startsWith('/api/upload')) {
+     return NextResponse.next()  // Skip middleware
+   }
+   ```
+
 ## Development Workflow
 
 ### Feature Tickets and Todo Management
