@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 import sharp from 'sharp'
 
+// Force Node.js runtime (sharp requires Node.js)
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
