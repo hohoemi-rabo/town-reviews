@@ -9,6 +9,7 @@ import ReviewList, { type ExtendedRecommendation } from '@/components/ReviewCard
 import PostModal from '@/components/PostModal/PostModal'
 import FilterPanel from '@/components/Filter/FilterPanel'
 import FilterBottomSheet from '@/components/Filter/FilterBottomSheet'
+import Footer from '@/components/Footer'
 
 export default function HomeClient() {
   const [showMap, setShowMap] = useState(false)
@@ -254,12 +255,16 @@ export default function HomeClient() {
                 </div>
               </div>
             </header>
-            <div className="px-4 py-6 sm:px-6 lg:px-8 pb-28">
+            <div className="px-4 py-6 sm:px-6 lg:px-8 md:pb-28">
               <ReviewList
                 key={reviews.length > 0 ? reviews[0]?.id : 'empty'}
                 initialReviews={reviews}
                 onTagsChanged={() => setTagRefreshTrigger((prev) => prev + 1)}
               />
+              {/* Mobile Footer */}
+              <div className="md:hidden mt-8">
+                <Footer />
+              </div>
             </div>
           </div>
         )}

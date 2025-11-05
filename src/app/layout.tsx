@@ -32,7 +32,9 @@ export default function RootLayout({
       >
         <ToastProvider>
           {children}
-          <Footer />
+          <div className="hidden md:block">
+            <Footer />
+          </div>
           <CookieBanner />
         </ToastProvider>
       </body>
