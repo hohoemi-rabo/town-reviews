@@ -283,7 +283,7 @@ export default function PostModal({
                 </div>
 
                 {/* Image upload */}
-                <ImageUpload images={images} onImagesChange={setImages} />
+                <ImageUpload images={images} onImagesChange={setImages} maxImages={1} />
 
                 {/* Category selector */}
                 <CategorySelector

@@ -13,7 +13,7 @@ interface ImageUploadProps {
 export default function ImageUpload({
   images,
   onImagesChange,
-  maxImages = 3,
+  maxImages = 1,
 }: ImageUploadProps) {
   const [previews, setPreviews] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
@@ -160,31 +160,26 @@ export default function ImageUpload({
         </div>
       )}
 
-      {/* Preview grid */}
+      {/* Preview */}
       {previews.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          {previews.map((preview, index) => (
-            <div
-              key={index}
-              className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 group"
-            >
-              <Image
-                src={preview}
-                alt={`Preview ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 33vw, 150px"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                aria-label="画像を削除"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+        <div className="relative w-full max-w-md rounded-lg overflow-hidden border-2 border-gray-200 group">
+          <div className="relative aspect-video">
+            <Image
+              src={previews[0]}
+              alt="プレビュー画像"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 448px"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => handleRemoveImage(0)}
+            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+            aria-label="画像を削除"
+          >
+            ✕
+          </button>
         </div>
       )}
 

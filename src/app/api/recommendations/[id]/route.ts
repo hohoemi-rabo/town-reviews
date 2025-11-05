@@ -97,9 +97,16 @@ export async function PATCH(
       )
     }
 
-    if (images && images.length > 3) {
+    if (images && images.length > 1) {
       return NextResponse.json(
-        { error: '画像は最大3枚までです' },
+        { error: '画像は1枚まで投稿できます' },
+        { status: 400 }
+      )
+    }
+
+    if (tags && tags.length > 3) {
+      return NextResponse.json(
+        { error: 'タグは最大3つまで選択できます' },
         { status: 400 }
       )
     }

@@ -76,6 +76,13 @@ export default function EditModal({
     setIsSubmitting(true)
     setError(null)
 
+    // Validation: Max 3 tags
+    if (tags.length > 3) {
+      setError('タグは最大3つまで選択できます')
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       const response = await fetch(`/api/recommendations/${recommendationId}`, {
         method: 'PATCH',
@@ -190,9 +197,6 @@ export default function EditModal({
 
           {/* Category selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              カテゴリー <span className="text-red-500">*</span>
-            </label>
             <CategorySelector
               selectedCategory={reviewCategory}
               onCategoryChange={setReviewCategory}
@@ -213,7 +217,7 @@ export default function EditModal({
               タグ{' '}
               <span className="text-xs text-gray-500">(最大3つまで、任意)</span>
             </label>
-            <TagSelector selectedTags={tags} onChange={setTags} />
+            <TagSelector selectedTags={tags} onChange={setTags} maxTags={3} />
           </div>
 
           {/* Image display and removal */}
@@ -222,39 +226,32 @@ export default function EditModal({
               画像 <span className="text-xs text-gray-500">(既存の画像を削除できます)</span>
             </label>
             {images.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {images.map((imageUrl, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={imageUrl}
-                      alt={`画像 ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg"
+              <div className="relative group max-w-xs">
+                <img
+                  src={images[0]}
+                  alt="投稿画像"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => setImages([])}
+                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="画像を削除"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newImages = images.filter((_, i) => i !== index)
-                        setImages(newImages)
-                      }}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="画像を削除"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+                  </svg>
+                </button>
               </div>
             ) : (
               <p className="text-sm text-gray-500">画像がありません</p>

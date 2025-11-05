@@ -225,12 +225,12 @@ This project uses Supabase for backend operations:
 - **Review categories**: Manual selection from グルメ, 景色, 体験, 癒し, その他
   - Category badges displayed on review cards with color coding
 - **Season selection**: Optional manual selection (春, 夏, 秋, 冬) with visual emoji buttons
-- **Tag selection**: 26 predefined tags across 5 categories, max 7 per post (displays first 5 + "+N" badge on cards)
-  - 料理ジャンル (6): 和食, 洋食・イタリアン, 中華, カフェ・スイーツ, ラーメン・麺類, 焼肉・居酒屋
-  - 雰囲気・特徴 (7): 絶景, 穴場, 人気, 静か, 賑やか, レトロ, SNS映え
-  - 誰と行く (6): 家族向け, 子連れOK, デート向き, 一人でも楽しめる, 友人と, 団体OK
-  - アクセス・設備 (4): 駅近, 車必須, 駐車場あり, バリアフリー
-  - 時間帯 (3): 朝がおすすめ, 昼がおすすめ, 夜がおすすめ
+- **Tag selection**: 24 predefined tags across 5 categories, max 3 per post (displays first 5 + "+N" badge on cards)
+  - 料理ジャンル (6): 和食, 洋食・イタリアン, 中華, カフェ・スイーツ, ラーメン・麺類, 焼肉・居酒屋 → Red color
+  - 雰囲気・特徴 (7): 絶景, 穴場, 人気, 静か, 賑やか, レトロ, SNS映え → Blue color
+  - 誰と行く (6): 家族向け, 子連れOK, デート向き, 一人でも楽しめる, 友人と, 団体OK → Purple color
+  - アクセス・設備 (2): 駐車場あり, バリアフリー → Green color (駅近・車必須 removed)
+  - 時間帯 (3): 朝がおすすめ, 昼がおすすめ, 夜がおすすめ → Orange color
   - **Note**: 価格帯、地域性・その他カテゴリーは現在コメントアウト（将来的に追加検討）
 - **Search & Filter**: Multiple filter options (category, season, tags, heard_from_types, keyword search)
 - **Manual Refresh**: 🔄 Button to fetch latest posts from other users (no real-time updates)
@@ -251,9 +251,9 @@ This project uses Supabase for backend operations:
 
 ### Security Notes
 - IP addresses are SHA-256 hashed, never stored raw
-- Image uploads: Max 3 per post, 5MB each, JPEG/PNG only
+- Image uploads: Max 1 per post (reduced from 3), 5MB each, JPEG/PNG only
 - Rate limiting on API routes (especially AI endpoints)
-- CSP headers prevent XSS attacks
+- CSP headers prevent XSS attacks (worker-src, script-src, etc.)
 - Admin panel protected by environment variable password
 
 ## Important Build Notes
@@ -1384,7 +1384,8 @@ const { data } = await (supabase as any).from('audit_logs').select('*')
    ```
 
 22. **UI/UX Layout and Scroll Management**
-   - **Current Tag System**: 24 tags total (max 3 per post) after removing "駅近" and "車必須"
+   - **Current Tag System**: 24 tags total (max 3 per post) after removing "駅近" and "車必須" (see section 24 for details)
+   - **Current Image System**: 1 image per post (reduced from 3 for storage optimization, see section 25)
    - **Header Mobile Display**: All buttons show icon-only on mobile (`hidden sm:inline` pattern)
    - **Default View**: List view is default on app load (`useState(false)` for showMap)
    - **Scroll Behavior**:
@@ -1430,3 +1431,56 @@ const { data } = await (supabase as any).from('audit_logs').select('*')
            └── List view: no overflow → child handles scroll
                └── div (overflow-y-auto) → sticky header works here
    ```
+
+23. **Content Security Policy (CSP) Configuration**
+   - Problem: Browser warnings about missing worker-src and image quality settings
+   - Solution: Configure CSP headers in `next.config.ts` and image quality settings
+
+   **CSP Configuration (`next.config.ts`):**
+   - `worker-src 'self' blob:` - Required for browser-image-compression library
+   - `images.qualities: [75, 85, 100]` - Explicit quality levels for Next.js Image optimization
+
+   **Important:** CSP warnings don't block functionality but should be addressed for:
+   - Security policy clarity
+   - Future Next.js compatibility
+   - Clean console output
+
+24. **Tag System and Color Coding**
+   - **Total Tags**: 24 tags across 5 categories (max 3 per post)
+   - **Category-Based Colors** (defined in `lib/formatters.ts`):
+     - 料理ジャンル (6 tags) → Red (`bg-red-100 text-red-700`)
+     - 雰囲気・特徴 (7 tags) → Blue (`bg-blue-100 text-blue-700`)
+     - 誰と行く (6 tags) → Purple (`bg-purple-100 text-purple-700`)
+     - アクセス・設備 (2 tags) → Green (`bg-green-100 text-green-700`)
+     - 時間帯 (3 tags) → Orange (`bg-orange-100 text-orange-700`)
+
+   **Pattern:**
+   ```typescript
+   // lib/formatters.ts - getTagColor function
+   export function getTagColor(tag: string): string {
+     // Check tag against predefined category arrays
+     // Return consistent color per category
+   }
+   ```
+
+   **Important:** If adding new tags, update both `TagSelector.tsx` and `formatters.ts`
+
+25. **Image Upload Limits and Storage Management**
+   - **Current Limit**: 1 image per post (reduced from 3 for storage optimization)
+   - **Processing Pipeline**:
+     - Client: browser-image-compression (max 1MB, 1920px)
+     - Server: sharp (resize to 1200px, WebP at 80% quality)
+     - Storage: Supabase Storage (recommendations-images bucket)
+
+   **Validation Points:**
+   - `ImageUpload.tsx`: `maxImages={1}` default
+   - `PostModal.tsx`: Pass `maxImages={1}` to ImageUpload
+   - `EditModal.tsx`: Single image display (no grid)
+   - API validation: Both POST and PATCH routes check `images.length > 1`
+
+   **Storage Estimates:**
+   - Average image size: 100-300KB (WebP compressed)
+   - 1,000 posts × 1 image × 200KB = ~200MB
+   - 5,000 posts × 1 image × 200KB = ~1GB (free plan limit)
+
+   **Important:** Existing posts with 3 images remain intact (ReviewImage.tsx handles multiple images)

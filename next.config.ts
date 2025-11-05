@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ['image/webp', 'image/avif'],
+    qualities: [75, 85, 100],
   },
   async headers() {
     return [
@@ -23,6 +24,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com",
+              "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https: *.supabase.co *.googleapis.com *.gstatic.com",
               "font-src 'self' data: https://fonts.gstatic.com",

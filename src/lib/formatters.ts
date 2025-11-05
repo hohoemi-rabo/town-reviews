@@ -51,26 +51,40 @@ export function getHeardFromIcon(heardFromType: string): string {
   return iconMap[heardFromType] || '💬'
 }
 
-// Get tag color class
+// Get tag color class based on category
 export function getTagColor(tag: string): string {
-  // Hash the tag string to get a consistent color
-  let hash = 0
-  for (let i = 0; i < tag.length; i++) {
-    hash = tag.charCodeAt(i) + ((hash << 5) - hash)
+  // 料理ジャンル (6タグ) - 赤系
+  const cuisineTags = ['和食', '洋食・イタリアン', '中華', 'カフェ・スイーツ', 'ラーメン・麺類', '焼肉・居酒屋']
+  if (cuisineTags.includes(tag)) {
+    return 'bg-red-100 text-red-700'
   }
 
-  const colors = [
-    'bg-blue-100 text-blue-700',
-    'bg-green-100 text-green-700',
-    'bg-yellow-100 text-yellow-700',
-    'bg-pink-100 text-pink-700',
-    'bg-purple-100 text-purple-700',
-    'bg-indigo-100 text-indigo-700',
-    'bg-red-100 text-red-700',
-    'bg-orange-100 text-orange-700',
-  ]
+  // 雰囲気・特徴 (7タグ) - 青系
+  const atmosphereTags = ['絶景', '穴場', '人気', '静か', '賑やか', 'レトロ', 'SNS映え']
+  if (atmosphereTags.includes(tag)) {
+    return 'bg-blue-100 text-blue-700'
+  }
 
-  return colors[Math.abs(hash) % colors.length]
+  // 誰と行く (6タグ) - 紫系
+  const companionTags = ['家族向け', '子連れOK', 'デート向き', '一人でも楽しめる', '友人と', '団体OK']
+  if (companionTags.includes(tag)) {
+    return 'bg-purple-100 text-purple-700'
+  }
+
+  // アクセス・設備 (2タグ) - 緑系
+  const accessTags = ['駐車場あり', 'バリアフリー']
+  if (accessTags.includes(tag)) {
+    return 'bg-green-100 text-green-700'
+  }
+
+  // 時間帯 (3タグ) - オレンジ系
+  const timeTags = ['朝がおすすめ', '昼がおすすめ', '夜がおすすめ']
+  if (timeTags.includes(tag)) {
+    return 'bg-orange-100 text-orange-700'
+  }
+
+  // デフォルト（該当なし）- グレー系
+  return 'bg-gray-100 text-gray-700'
 }
 
 // Get season emoji
