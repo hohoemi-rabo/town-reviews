@@ -121,7 +121,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
               note_raw: updatedData.note,
               note_formatted: updatedData.note,
               review_category: updatedData.reviewCategory,
-              season: updatedData.season,
+              season: updatedData.season ?? null,
               tags: updatedData.tags,
               images: updatedData.images,
               author_name: updatedData.authorName,
