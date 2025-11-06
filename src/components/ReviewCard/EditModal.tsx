@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import SourceSelector from '../PostModal/SourceSelector'
 import CategorySelector from '../PostModal/CategorySelector'
-import SeasonSelector from '../PostModal/SeasonSelector'
+// import SeasonSelector from '../PostModal/SeasonSelector' // Commented out as per user request
 import TagSelector from '../PostModal/TagSelector'
+import { generateTextFromTags } from '@/lib/text-generator'
+import { useToast } from '@/components/Toast/ToastProvider'
 
 interface EditModalProps {
   isOpen: boolean
@@ -15,7 +17,7 @@ interface EditModalProps {
     heardFrom: string
     note: string
     reviewCategory: string
-    season: string | null
+    season?: string | null // Made optional - not displayed after user request
     tags: string[]
     images: string[]
     authorName: string | null
@@ -26,7 +28,7 @@ interface EditModalProps {
     heardFrom: string
     note: string
     reviewCategory: string
-    season: string | null
+    season?: string | null // Made optional - not displayed after user request
     tags: string[]
     images: string[]
     authorName: string | null
@@ -41,18 +43,20 @@ export default function EditModal({
   initialData,
   onSuccess,
 }: EditModalProps) {
+  const { showToast } = useToast()
   const [heardFromType, setHeardFromType] = useState(initialData.heardFromType)
   const [heardFrom, setHeardFrom] = useState(initialData.heardFrom)
   const [note, setNote] = useState(initialData.note)
   const [reviewCategory, setReviewCategory] = useState(
     initialData.reviewCategory
   )
-  const [season, setSeason] = useState<string | null>(initialData.season)
+  const [season, setSeason] = useState<string | null>(initialData.season ?? null)
   const [tags, setTags] = useState<string[]>(initialData.tags)
   const [images, setImages] = useState<string[]>(initialData.images)
   const [authorName, setAuthorName] = useState(initialData.authorName || '')
   const [isAnonymous, setIsAnonymous] = useState(initialData.isAnonymous)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Reset form when modal opens with new data
@@ -62,7 +66,7 @@ export default function EditModal({
       setHeardFrom(initialData.heardFrom)
       setNote(initialData.note)
       setReviewCategory(initialData.reviewCategory)
-      setSeason(initialData.season)
+      setSeason(initialData.season ?? null)
       setTags(initialData.tags)
       setImages(initialData.images)
       setAuthorName(initialData.authorName || '')
@@ -71,14 +75,55 @@ export default function EditModal({
     }
   }, [isOpen, initialData])
 
+  const handleGenerateText = () => {
+    // タグが選択されていない場合はエラー
+    if (tags.length === 0) {
+      setError('タグを最低1つ選択してください')
+      return
+    }
+
+    setError(null)
+    setGenerating(true)
+
+    try {
+      // タグから文章を生成
+      const generatedText = generateTextFromTags(tags)
+
+      // 生成結果をnoteに設定
+      setNote(generatedText)
+    } catch (err) {
+      console.error('Text generation error:', err)
+      setError('文章の生成に失敗しました')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
+    // Validation: Tags required
+    if (tags.length === 0) {
+      setError('タグを最低1つ選択してください')
+      showToast('タグを最低1つ選択してください', 'error')
+      setIsSubmitting(false)
+      return
+    }
+
     // Validation: Max 3 tags
     if (tags.length > 3) {
       setError('タグは最大3つまで選択できます')
+      showToast('タグは最大3つまで選択できます', 'error')
+      setIsSubmitting(false)
+      return
+    }
+
+    // Validation: Note required
+    if (!note.trim()) {
+      setError('口コミを入力してください')
+      showToast('口コミを入力してください', 'error')
       setIsSubmitting(false)
       return
     }
@@ -172,29 +217,6 @@ export default function EditModal({
             />
           </div>
 
-          {/* Note */}
-          <div>
-            <label
-              htmlFor="note"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              メモ <span className="text-red-500">*</span>
-              <span className="text-xs text-gray-500 ml-2">
-                ({note.length}/200文字)
-              </span>
-            </label>
-            <textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="このスポットについて教えてください"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-washi-green focus:border-transparent resize-none"
-              rows={4}
-              maxLength={200}
-              required
-            />
-          </div>
-
           {/* Category selector */}
           <div>
             <CategorySelector
@@ -203,13 +225,13 @@ export default function EditModal({
             />
           </div>
 
-          {/* Season selector */}
-          <div>
+          {/* Season selector - Commented out as per user request */}
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               季節 <span className="text-xs text-gray-500">(任意)</span>
             </label>
             <SeasonSelector selectedSeason={season} onChange={setSeason} />
-          </div>
+          </div> */}
 
           {/* Tag selector */}
           <div>
@@ -218,6 +240,47 @@ export default function EditModal({
               <span className="text-xs text-gray-500">(最大3つまで、任意)</span>
             </label>
             <TagSelector selectedTags={tags} onChange={setTags} maxTags={3} />
+          </div>
+
+          {/* Generate text button */}
+          <div>
+            <button
+              type="button"
+              onClick={handleGenerateText}
+              disabled={tags.length === 0 || generating}
+              className="w-full sm:w-auto px-6 py-3 bg-washi-green text-white rounded-lg font-medium hover:bg-washi-green-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <span className="text-xl">📝</span>
+              {generating ? '生成中...' : '文章を生成する'}
+            </button>
+            {tags.length === 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                ※ タグを選択すると文章生成ボタンが使えます
+              </p>
+            )}
+          </div>
+
+          {/* Note */}
+          <div>
+            <label
+              htmlFor="note"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              口コミ <span className="text-red-500">*</span>
+              <span className="text-xs text-gray-500 ml-2">
+                ({note.length}/200文字)
+              </span>
+            </label>
+            <textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="生成ボタンで文章を作成するか、直接入力してください"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-washi-green focus:border-transparent resize-none"
+              rows={4}
+              maxLength={200}
+              required
+            />
           </div>
 
           {/* Image display and removal */}

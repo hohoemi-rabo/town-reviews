@@ -22,15 +22,6 @@ export async function GET(request: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // First, check if table has any data at all (debug)
-    const { data: allData, error: checkError } = await supabase
-      .from('facility_requests')
-      .select('id, facility_name, status')
-      .limit(10)
-
-    console.log('Debug - All facility requests (first 10):', allData)
-    console.log('Debug - Check error:', checkError)
-
     let query = supabase
       .from('facility_requests')
       .select('*')
@@ -50,8 +41,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       )
     }
-
-    console.log(`Fetched ${data?.length || 0} facility requests with status: ${statusFilter || 'all'}`)
 
     return NextResponse.json({
       success: true,

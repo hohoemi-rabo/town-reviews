@@ -1,6 +1,16 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export default function Footer() {
+  const pathname = usePathname()
+
+  // 管理画面では表示しない
+  if (pathname?.startsWith('/admin')) {
+    return null
+  }
+
   return (
     <footer className="md:fixed md:bottom-0 md:left-0 md:right-0 bg-white border-t border-gray-200 z-10">
       <div className="max-w-7xl mx-auto px-4 py-6">

@@ -8,6 +8,8 @@ import FacilitySearchInput, { type Facility } from './FacilitySearchInput'
 import FacilityRequestModal from './FacilityRequestModal'
 import SeasonSelector from './SeasonSelector'
 import TagSelector from './TagSelector'
+import { generateTextFromTags } from '@/lib/text-generator'
+import { useToast } from '@/components/Toast/ToastProvider'
 import type { Tables } from '@/types/database.types'
 
 type ExtendedRecommendation = Tables<'recommendations'> & {
@@ -34,6 +36,7 @@ export default function PostModal({
   onClose,
   onSubmitSuccess,
 }: PostModalProps) {
+  const { showToast } = useToast()
   const [step, setStep] = useState<'search' | 'form'>('search')
   const [placeData, setPlaceData] = useState<PlaceData | null>(null)
   const [showRequestModal, setShowRequestModal] = useState(false)
@@ -42,7 +45,7 @@ export default function PostModal({
   const [heardFromType, setHeardFromType] = useState('')
   const [heardFrom, setHeardFrom] = useState('')
   const [note, setNote] = useState('')
-  const [reviewCategory, setReviewCategory] = useState('その他')
+  const [reviewCategory, setReviewCategory] = useState('グルメ')
   const [season, setSeason] = useState<string | null>(null)
   const [tags, setTags] = useState<string[]>([])
   const [images, setImages] = useState<File[]>([])
@@ -52,6 +55,7 @@ export default function PostModal({
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!isOpen) return null
@@ -73,34 +77,70 @@ export default function PostModal({
     setShowRequestModal(true)
   }
 
+  const handleGenerateText = () => {
+    // タグが選択されていない場合はエラー
+    if (tags.length === 0) {
+      setError('タグを最低1つ選択してください')
+      return
+    }
+
+    setError(null)
+    setGenerating(true)
+
+    try {
+      // タグから文章を生成
+      const generatedText = generateTextFromTags(tags)
+
+      // 生成結果をnoteに設定
+      setNote(generatedText)
+    } catch (err) {
+      console.error('Text generation error:', err)
+      setError('文章の生成に失敗しました')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
     // Validation
     if (!heardFromType) {
       setError('情報源を選択してください')
+      showToast('情報源を選択してください', 'error')
       return
     }
 
     // TODO: Uncomment if you want to require input for "その他"
     // if (heardFromType === 'その他' && !heardFrom.trim()) {
     //   setError('情報源の詳細を入力してください')
+    //   showToast('情報源の詳細を入力してください', 'error')
     //   return
     // }
 
+    // タグ選択必須チェック
+    if (tags.length === 0) {
+      setError('タグを最低1つ選択してください')
+      showToast('タグを最低1つ選択してください', 'error')
+      return
+    }
+
     if (!note.trim()) {
-      setError('メモを入力してください')
+      setError('口コミを入力してください')
+      showToast('口コミを入力してください', 'error')
       return
     }
 
     if (!isAnonymous && !authorName.trim()) {
       setError('投稿者名を入力してください')
+      showToast('投稿者名を入力してください', 'error')
       return
     }
 
     // TODO: Uncomment when ready to enforce terms agreement
     // if (!agreedToTerms) {
     //   setError('利用規約に同意してください')
+    //   showToast('利用規約に同意してください', 'error')
     //   return
     // }
 
@@ -189,7 +229,7 @@ export default function PostModal({
     setHeardFromType('')
     setHeardFrom('')
     setNote('')
-    setReviewCategory('その他')
+    setReviewCategory('グルメ')
     setImages([])
     setAuthorName('')
     setIsAnonymous(true)
@@ -264,15 +304,52 @@ export default function PostModal({
                   onHeardFromChange={setHeardFrom}
                 />
 
+                {/* Category selector */}
+                <CategorySelector
+                  selectedCategory={reviewCategory}
+                  onCategoryChange={setReviewCategory}
+                />
+
+                {/* Season selector - Commented out as per user request */}
+                {/* <SeasonSelector
+                  selectedSeason={season}
+                  onChange={setSeason}
+                /> */}
+
+                {/* Tag selector */}
+                <TagSelector
+                  selectedTags={tags}
+                  onChange={setTags}
+                  maxTags={3}
+                />
+
+                {/* Generate text button */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleGenerateText}
+                    disabled={tags.length === 0 || generating}
+                    className="w-full sm:w-auto px-6 py-3 bg-washi-green text-white rounded-lg font-medium hover:bg-washi-green-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <span className="text-xl">📝</span>
+                    {generating ? '生成中...' : '文章を生成する'}
+                  </button>
+                  {tags.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      ※ タグを選択すると文章生成ボタンが使えます
+                    </p>
+                  )}
+                </div>
+
                 {/* Note input */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    メモ <span className="text-red-500">*</span>
+                    口コミ <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="例: 手打ちそばが絶品！鴨南蛮がおすすめ。お店の雰囲気も落ち着いていて、ゆっくり食事ができます。"
+                    placeholder="生成ボタンで文章を作成するか、直接入力してください"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-washi-green resize-none"
                     rows={5}
                     maxLength={200}
@@ -284,25 +361,6 @@ export default function PostModal({
 
                 {/* Image upload */}
                 <ImageUpload images={images} onImagesChange={setImages} maxImages={1} />
-
-                {/* Category selector */}
-                <CategorySelector
-                  selectedCategory={reviewCategory}
-                  onCategoryChange={setReviewCategory}
-                />
-
-                {/* Season selector */}
-                <SeasonSelector
-                  selectedSeason={season}
-                  onChange={setSeason}
-                />
-
-                {/* Tag selector */}
-                <TagSelector
-                  selectedTags={tags}
-                  onChange={setTags}
-                  maxTags={3}
-                />
 
                 {/* Author info */}
                 <div className="space-y-3">

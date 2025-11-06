@@ -309,6 +309,10 @@ This project uses Supabase for backend operations:
   - **Critical**: `loadGoogleMapsScript()` uses Promise caching and DOM checking to prevent multiple script loads
 - `lib/text-utils.ts` - Text conversion utilities (hiragana ⇔ katakana, full-width → half-width)
   - `generateSearchVariants()`: Creates search variants for facility search (e.g., "みかわ" → ["みかわ", "ミカワ"])
+- `lib/text-generator.ts` - **New**: Tag-based text generation for review creation (Ticket 017)
+  - `generateTextFromTags()`: Creates natural Japanese review text from selected tags
+  - Pattern-based generation with randomization for variety
+  - Used in PostModal and EditModal for assisted review writing
 - `lib/formatters.ts` - Time formatting, icons (heard_from, category), tag colors, review category emoji/colors
 - `lib/image-compression.ts` - Client-side image validation and compression
 - `lib/supabase/client.ts` - Browser-side Supabase client
@@ -873,6 +877,12 @@ When implementing these tickets, always check the "備考" (Remarks) section for
   - **Post-Phase Maintenance**: Duplicate detection and removal scripts ✅
     - `find-duplicates.ts`: Detect duplicates by location/name without API
     - `remove-duplicates.ts`: Safe removal with dry-run mode and automatic backup
+- ✅ **Ticket 017**: Tag-based text generation ✅ **FULLY COMPLETED**
+  - **Background**: Help users create review text from selected tags
+  - **Implementation**: `lib/text-generator.ts` with pattern-based generation
+  - **UI Integration**: Generate button in both PostModal and EditModal
+  - **Validation**: Requires minimum 1 tag selection (max 3)
+  - **User Flow**: Select tags → Click generate → Edit generated text → Submit
 
 ## Next.js App Router Best Practices
 
@@ -1638,3 +1648,42 @@ const { data } = await (supabase as any).from('audit_logs').select('*')
    - 5,000 posts × 1 image × 200KB = ~1GB (free plan limit)
 
    **Important:** Existing posts with 3 images remain intact (ReviewImage.tsx handles multiple images)
+
+26. **Admin Panel UI Components Visibility**
+   - **Footer.tsx**: Hidden on admin pages via pathname check (`pathname?.startsWith('/admin')`)
+   - **CookieBanner.tsx**: Hidden on admin pages (same pattern as Footer)
+   - **Implementation**: Both components use `'use client'` directive and `usePathname()` hook
+   - **Reason**: Admin panel is single-user (no need for Cookie consent), cleaner UI
+
+   **Pattern:**
+   ```typescript
+   'use client'
+   import { usePathname } from 'next/navigation'
+
+   export default function Footer() {
+     const pathname = usePathname()
+
+     // Hide on admin pages
+     if (pathname?.startsWith('/admin')) {
+       return null
+     }
+
+     return <footer>...</footer>
+   }
+   ```
+
+27. **Debug Logging Best Practices**
+   - **Rule**: Never leave `console.log()` or `console.debug()` in production code
+   - **Keep**: `console.error()` for error tracking (essential for debugging)
+   - **Removed**: All debug logs from API routes and components
+   - **Example locations cleaned**:
+     - `CookieBanner.tsx`: Removed pathname/isAdminPage debug log
+     - `/api/admin/facility-requests/route.ts`: Removed all debug query logs
+
+   **Before deployment checklist:**
+   ```bash
+   # Search for console.log in source code
+   grep -r "console.log\|console.debug" src/ --include="*.ts" --include="*.tsx"
+
+   # Should only show console.error (which is OK to keep)
+   ```

@@ -3,7 +3,7 @@
 import {
   formatRelativeTime,
   getHeardFromIcon,
-  getSeasonEmoji,
+  // getSeasonEmoji, // Commented out - not used after hiding season display
   getReviewCategoryEmoji,
   getReviewCategoryColor,
   getReviewCategoryBgColor,
@@ -24,7 +24,7 @@ interface ReviewCardProps {
   reviewCategory: string
   images: string[]
   tags: string[]
-  season: string | null
+  // season: string | null // Commented out - not displayed after user request
   authorName: string | null
   isAnonymous: boolean
   createdAt: string
@@ -42,7 +42,7 @@ export default function ReviewCard({
   reviewCategory,
   images,
   tags,
-  season,
+  // season, // Commented out - not displayed after user request
   authorName,
   isAnonymous,
   createdAt,
@@ -134,7 +134,8 @@ export default function ReviewCard({
           <span className="text-base">{getHeardFromIcon(heardFromType)}</span>
           <span>{heardFrom}から</span>
         </span>
-        {season && (
+        {/* Season badge - Commented out as per user request */}
+        {/* {season && (
           <span
             className="inline-flex items-center gap-1 px-3 py-1 bg-washi-beige text-washi-green rounded-full text-xs font-medium"
             aria-label={`季節: ${season}`}
@@ -142,7 +143,7 @@ export default function ReviewCard({
             <span className="text-base">{getSeasonEmoji(season)}</span>
             <span>{season}</span>
           </span>
-        )}
+        )} */}
       </div>
 
       {/* Note content */}

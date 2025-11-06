@@ -187,7 +187,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
               reviewCategory={review.review_category || 'その他'}
               images={review.images || []}
               tags={review.tags || []}
-              season={review.season}
+              // season={review.season} // Commented out - not displayed after user request
               authorName={review.author_name}
               isAnonymous={review.is_anonymous ?? true}
               createdAt={review.created_at || new Date().toISOString()}
@@ -226,7 +226,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
             heardFrom: editingReview.heard_from,
             note: editingReview.note_raw || '',
             reviewCategory: editingReview.review_category || 'その他',
-            season: editingReview.season,
+            // season: editingReview.season, // Commented out - not displayed after user request
             tags: editingReview.tags || [],
             images: editingReview.images || [],
             authorName: editingReview.author_name,

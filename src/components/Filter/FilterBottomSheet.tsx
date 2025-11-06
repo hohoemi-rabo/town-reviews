@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useFilter } from '@/hooks/useFilter'
 import TagFilter from './TagFilter'
-import SeasonFilter from './SeasonFilter'
+// import SeasonFilter from './SeasonFilter' // Commented out as per user request
 import SourceFilter from './SourceFilter'
 import ContentSearchInput from './ContentSearchInput'
 import FacilityFilter from './FacilityFilter'
@@ -111,11 +111,11 @@ export default function FilterBottomSheet({
             refreshTrigger={refreshTrigger}
           />
 
-          {/* Season Filter */}
-          <SeasonFilter
+          {/* Season Filter - Commented out as per user request */}
+          {/* <SeasonFilter
             selectedSeason={filters.season}
             onChange={(season) => updateFilters({ season })}
-          />
+          /> */}
 
           {/* Source Filter */}
           <SourceFilter
