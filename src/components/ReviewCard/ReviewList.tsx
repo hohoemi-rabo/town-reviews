@@ -102,7 +102,7 @@ export default function ReviewList({ initialReviews = [], onLoadMore, onTagsChan
     heardFrom: string
     note: string
     reviewCategory: string
-    season: string | null
+    season?: string | null
     tags: string[]
     images: string[]
     authorName: string | null
