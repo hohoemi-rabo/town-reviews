@@ -60,12 +60,13 @@ function categorizeTag(tags: string[]): Record<TagCategory, string[]> {
 /**
  * 料理ジャンルカテゴリーの文章生成
  * 例: "和食" → "和食のお店です"
+ * 例: "和食、中華" → "和食、中華のお店です"
  */
 function generateCuisineText(tags: string[]): string {
   if (tags.length === 0) return ''
   if (tags.length === 1) return `${tags[0]}のお店です`
-  // 複数の場合は最初のタグのみ使用（通常は1つのみ選択される想定）
-  return `${tags[0]}のお店です`
+  // 複数の場合は「、」で繋ぐ
+  return `${tags.join('、')}のお店です`
 }
 
 /**
