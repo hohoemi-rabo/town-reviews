@@ -53,7 +53,7 @@ export default function FilterBottomSheet({
       <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-lg max-h-[90vh] flex flex-col animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-washi-green">絞り込み</h2>
+          <h2 className="text-lg font-bold text-washi-green">検索</h2>
           <div className="flex items-center gap-3">
             {activeFilterCount > 0 && (
               <button

@@ -25,7 +25,7 @@ export default function FilterPanel({ onClose, refreshTrigger }: FilterPanelProp
       <div className="p-4 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-washi-green">絞り込み</h2>
+          <h2 className="text-lg font-bold text-washi-green">検索</h2>
           {activeFilterCount > 0 && (
             <button
               onClick={clearFilters}

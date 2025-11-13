@@ -150,7 +150,7 @@ export default function HomeClient() {
                     className="relative px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2"
                   >
                     <span>🔍</span>
-                    <span className="hidden sm:inline">絞り込み</span>
+                    <span className="hidden sm:inline">検索</span>
                     {activeFilterCount > 0 && (
                       <span className="absolute -top-2 -right-2 bg-washi-orange text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
                         {activeFilterCount}
@@ -219,7 +219,7 @@ export default function HomeClient() {
                     className="relative px-4 py-2 bg-white border-2 border-washi-green text-washi-green rounded-lg hover:bg-washi-beige transition-colors font-bold flex items-center gap-2"
                   >
                     <span>🔍</span>
-                    <span className="hidden sm:inline">絞り込み</span>
+                    <span className="hidden sm:inline">検索</span>
                     {activeFilterCount > 0 && (
                       <span className="absolute -top-2 -right-2 bg-washi-orange text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
                         {activeFilterCount}
