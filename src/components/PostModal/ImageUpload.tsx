@@ -146,9 +146,6 @@ export default function ImageUpload({
             <p className="text-sm text-gray-600">
               クリックまたはドラッグ&ドロップで画像を追加
             </p>
-            <p className="text-xs text-gray-500">
-              JPEG、PNG形式、5MB以下
-            </p>
           </div>
         </div>
       )}

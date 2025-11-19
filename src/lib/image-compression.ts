@@ -11,8 +11,8 @@ export async function compressImage(
   options: CompressionOptions = {}
 ): Promise<File> {
   const defaultOptions = {
-    maxSizeMB: 1, // Max file size in MB
-    maxWidthOrHeight: 1920, // Max width or height
+    maxSizeMB: 0.5, // Max file size: 500KB (optimized for mobile reviews)
+    maxWidthOrHeight: 1200, // Max width or height (sufficient for review images)
     useWebWorker: false, // Disabled to avoid CSP issues with external CDN
     ...options,
   }
@@ -36,12 +36,12 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     }
   }
 
-  // Check file size (5MB max)
-  const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+  // Check file size (20MB max - will be compressed to 500KB)
+  const maxSize = 20 * 1024 * 1024 // 20MB in bytes (generous limit for raw photos)
   if (file.size > maxSize) {
     return {
       valid: false,
-      error: 'ファイルサイズは5MB以下にしてください',
+      error: 'ファイルサイズは20MB以下にしてください（自動的に500KB以下に圧縮されます）',
     }
   }
 
