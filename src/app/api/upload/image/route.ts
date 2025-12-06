@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     console.log('[Upload API] Uploading WebP image:', filePath, 'Size:', processedImage.length, 'bytes')
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('recommendations-images')
       .upload(filePath, processedImage, {
         contentType: 'image/webp',

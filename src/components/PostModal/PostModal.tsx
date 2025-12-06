@@ -6,7 +6,7 @@ import ImageUpload from './ImageUpload'
 import CategorySelector from './CategorySelector'
 import FacilitySearchInput, { type Facility } from './FacilitySearchInput'
 import FacilityRequestModal from './FacilityRequestModal'
-import SeasonSelector from './SeasonSelector'
+// import SeasonSelector from './SeasonSelector' // TODO: Uncomment when season feature is enabled
 import TagSelector from './TagSelector'
 import { generateTextFromTags } from '@/lib/text-generator'
 import { useToast } from '@/components/Toast/ToastProvider'
@@ -46,7 +46,7 @@ export default function PostModal({
   const [heardFrom, setHeardFrom] = useState('')
   const [note, setNote] = useState('')
   const [reviewCategory, setReviewCategory] = useState('グルメ')
-  const [season, setSeason] = useState<string | null>(null)
+  const season: string | null = null // Season feature disabled
   const [tags, setTags] = useState<string[]>([])
   const [images, setImages] = useState<File[]>([])
   const [authorName, setAuthorName] = useState('')

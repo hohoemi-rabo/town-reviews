@@ -55,6 +55,7 @@ export default function EditRecommendationModal({
     if (isOpen && recommendationId) {
       fetchRecommendation()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, recommendationId])
 
   const fetchRecommendation = async () => {

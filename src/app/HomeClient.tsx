@@ -73,6 +73,11 @@ export default function HomeClient() {
     }
   }
 
+  // Extract complex expressions to variables for ESLint
+  const tagsKey = filters.tags?.join(',')
+  const heardFromTypesKey = filters.heardFromTypes?.join(',')
+  const categoriesKey = filters.categories?.join(',')
+
   // Auto-fetch reviews when filters change
   useEffect(() => {
     // Skip fetch if we just added a new post
@@ -86,10 +91,10 @@ export default function HomeClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filters.facilityId,
-    filters.tags?.join(','),
+    tagsKey,
     filters.season,
-    filters.heardFromTypes?.join(','),
-    filters.categories?.join(','),
+    heardFromTypesKey,
+    categoriesKey,
     filters.search,
     skipNextFetch,
   ])

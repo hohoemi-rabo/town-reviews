@@ -20,6 +20,7 @@ export default function FacilityRequestsPage() {
 
   useEffect(() => {
     fetchRequests()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
 
   const fetchRequests = async () => {

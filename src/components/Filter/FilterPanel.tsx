@@ -16,7 +16,7 @@ interface FilterPanelProps {
 /**
  * フィルタパネルコンポーネント（デスクトップ用サイドバー）
  */
-export default function FilterPanel({ onClose, refreshTrigger }: FilterPanelProps) {
+export default function FilterPanel({ refreshTrigger }: FilterPanelProps) {
   const { filters, updateFilters, clearFilters, activeFilterCount } =
     useFilter()
 

@@ -31,11 +31,13 @@ export default function FacilitiesPage() {
     }, 1000) // Wait 1 second after user stops typing
 
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
   // Fetch immediately when other filters change
   useEffect(() => {
     fetchFacilities()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areaFilter, categoryFilter, showOnlyVerified])
 
   const fetchFacilities = async () => {

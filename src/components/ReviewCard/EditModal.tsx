@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import SourceSelector from '../PostModal/SourceSelector'
 import CategorySelector from '../PostModal/CategorySelector'
 // import SeasonSelector from '../PostModal/SeasonSelector' // Commented out as per user request
@@ -290,9 +291,11 @@ export default function EditModal({
             </label>
             {images.length > 0 ? (
               <div className="relative group max-w-xs">
-                <img
+                <Image
                   src={images[0]}
                   alt="投稿画像"
+                  width={320}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg"
                 />
                 <button

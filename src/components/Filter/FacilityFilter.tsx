@@ -20,7 +20,6 @@ interface FacilityFilterProps {
  * Ticket 016のFacilitySearchInputの機能を再利用
  */
 export default function FacilityFilter({
-  selectedFacilityId,
   onChange,
 }: FacilityFilterProps) {
   const [query, setQuery] = useState('')
